@@ -44,7 +44,7 @@ class MyHomePageState extends State<MyHomePage> {
         .getDocuments()
         .then((querySnapshot) {
       for (var document in querySnapshot.documents) {
-        var perk = Perk(document['name'], document['description']);
+        var perk = Perk.fromDocument(document);
         setState(() {
           perks.add(perk);
         });
@@ -55,9 +55,13 @@ class MyHomePageState extends State<MyHomePage> {
 
   void _randomizePerks() {
     List<Perk> newPerkBuild = [];
+    List<int> selected = [];
     for (var i = 0; i < 4; i ++) {
       var randomIndex = Random().nextInt(perks.length);
+      // Ensure that we never get the same perk in the same slot
+      while (selected.contains(randomIndex)) {randomIndex = Random().nextInt(perks.length);}
       newPerkBuild.add(perks[randomIndex]);
+      selected.add(randomIndex);
     }
     setState(() {
       perkBuild = newPerkBuild;
@@ -69,18 +73,14 @@ class MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     var columnChildren = List<Widget>();
     if (perkBuild.length == numPerks) {
-      columnChildren = [
-        new PerkSlotView(perk: perkBuild[0]),
-        new PerkSlotView(perk: perkBuild[1]),
-        new PerkSlotView(perk: perkBuild[2]),
-        new PerkSlotView(perk: perkBuild[3]),
-      ];
+      columnChildren = perkBuild.map((perk) => PerkSlotView(perk: perk)).toList();
     }
     return new Scaffold(
       appBar: new AppBar(title: new Text(widget.title)),
       body: new Container(
           color: Colors.white,
-          child: new Column(
+          child: new GridView.count(
+            crossAxisCount: 2,
             children: columnChildren,
           )),
       floatingActionButton: new FloatingActionButton(
@@ -98,10 +98,19 @@ class PerkSlotView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: new Column(
-        children: <Widget>[new Text(perk.name), new Text(perk.description)],
-      ),
+      padding: const EdgeInsets.all(5.0),
+      child: new Card(
+        elevation: 8.0,
+        child: new Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: <Widget>[
+              new Text(perk.name, style: Theme.of(context).textTheme.headline,), 
+              new Text(perk.description, style: Theme.of(context).textTheme.body1)
+            ],
+          ),
+        ),
+      )
     );
   }
 }
