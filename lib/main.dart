@@ -1,7 +1,7 @@
-
 // Packages
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'dart:math';
 
 // Internal
 import 'perk.dart';
@@ -25,9 +25,6 @@ class MyHomePage extends StatefulWidget {
 
   final String title;
 
-  void _randomizePerks() {
-
-  }
 
   @override
   MyHomePageState createState() {
@@ -37,44 +34,57 @@ class MyHomePage extends StatefulWidget {
 
 class MyHomePageState extends State<MyHomePage> {
   List<Perk> perks = [];
+  List<Perk> perkBuild = [];
+  int numPerks = 4;
 
   @override
   void initState() {
-    var perksRef = Firestore.instance.collection('perks')
-      .getDocuments()
-      .then((querySnapshot) {
-        for (var document in querySnapshot.documents) {
-          var perk = Perk(document['name'], document['description']);
-          setState(() {
-            perks.add(perk);
-          });
-        }
+    var perksRef = Firestore.instance
+        .collection('perks')
+        .getDocuments()
+        .then((querySnapshot) {
+      for (var document in querySnapshot.documents) {
+        var perk = Perk(document['name'], document['description']);
+        setState(() {
+          perks.add(perk);
+        });
+      }
     });
     super.initState();
   }
-  
+
+  void _randomizePerks() {
+    List<Perk> newPerkBuild = [];
+    for (var i = 0; i < 4; i ++) {
+      var randomIndex = Random().nextInt(perks.length);
+      newPerkBuild.add(perks[randomIndex]);
+    }
+    setState(() {
+      perkBuild = newPerkBuild;
+    });
+
+  }
+
   @override
   Widget build(BuildContext context) {
     var columnChildren = List<Widget>();
-    if (perks.length > 4) {
+    if (perkBuild.length == numPerks) {
       columnChildren = [
-        new PerkSlotView(perk: perks[0]),
-        new PerkSlotView(perk: perks[1]),
-        new PerkSlotView(perk: perks[2]),
-        new PerkSlotView(perk: perks[3]),
+        new PerkSlotView(perk: perkBuild[0]),
+        new PerkSlotView(perk: perkBuild[1]),
+        new PerkSlotView(perk: perkBuild[2]),
+        new PerkSlotView(perk: perkBuild[3]),
       ];
-    } 
+    }
     return new Scaffold(
       appBar: new AppBar(title: new Text(widget.title)),
       body: new Container(
-        color: Colors.white,
-        child: new Column(
-          children: columnChildren,
-        )
-
-      ),
+          color: Colors.white,
+          child: new Column(
+            children: columnChildren,
+          )),
       floatingActionButton: new FloatingActionButton(
-        onPressed: widget._randomizePerks,
+        onPressed: _randomizePerks,
         backgroundColor: Colors.redAccent,
       ),
     );
@@ -82,12 +92,17 @@ class MyHomePageState extends State<MyHomePage> {
 }
 
 class PerkSlotView extends StatelessWidget {
-  const PerkSlotView({Key key, this.perk}): super(key: key);
+  const PerkSlotView({Key key, this.perk}) : super(key: key);
   final Perk perk;
 
   @override
   Widget build(BuildContext context) {
-    return new Row(children: <Widget>[new Text(perk.name), new Text(perk.description)],);
+    return new Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: new Column(
+        children: <Widget>[new Text(perk.name), new Text(perk.description)],
+      ),
+    );
   }
 }
 
@@ -99,14 +114,13 @@ class PerkListView extends StatelessWidget {
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const Text('Loading...');
           return new ListView.builder(
-            itemCount: snapshot.data.documents.length,
-            padding: const EdgeInsets.only(top: 10.0),
-            itemExtent: 55.0,
-            itemBuilder: (context, index) {
-              DocumentSnapshot ds = snapshot.data.documents[index];
-              return new Text(" ${ds['name']} ${ds['description']}");
-            }
-          );
+              itemCount: snapshot.data.documents.length,
+              padding: const EdgeInsets.only(top: 10.0),
+              itemExtent: 55.0,
+              itemBuilder: (context, index) {
+                DocumentSnapshot ds = snapshot.data.documents[index];
+                return new Text(" ${ds['name']} ${ds['description']}");
+              });
         });
   }
 }
