@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "612079491419",
+    "firebase_url": "https://dbdr-6fbb1.firebaseio.com",
+    "project_id": "dbdr-6fbb1",
+    "storage_bucket": "dbdr-6fbb1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:612079491419:android:472df683bdd23490",
+        "android_client_info": {
+          "package_name": "com.lookmastudio.dbdr"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "612079491419-f3geirsu3u1nko9jt1qtte145jukmtd6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD6LARQRqj5qLM5n91UJaF6B7LfMrarqvw"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
