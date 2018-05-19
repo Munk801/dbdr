@@ -11,43 +11,72 @@ import 'package:transparent_image/transparent_image.dart';
 // Internal
 import 'perk.dart';
 
+class DBDRStorageManager {
+  static final sharedInstance = new DBDRStorageManager();
+  FirebaseStorage storage;
+
+  Future<Null> initialize() async {
+    await FirebaseApp.configure(
+      name: 'DBDR',
+      options: new FirebaseOptions(
+        googleAppID: Platform.isIOS
+            ? '1:612079491419:ios:472df683bdd23490'
+            : '1:612079491419:android:472df683bdd23490',
+        gcmSenderID: '612079491419',
+        apiKey: 'AIzaSyAf4e2fO674CDoZ66LQxjqi5wvV2yR_SlM',
+        projectID: 'dbdr-6fbb1',
+      ),
+    ).then((app) {
+      this.storage = new FirebaseStorage(app: app, storageBucket: 'gs://dbdr-6fbb1.appspot.com');
+    });
+  }
+
+  Future<String> getPerkImageURL(Perk perk) async {
+    var assetUrl =  '/images/perks/${perk.id}.png';
+    print("Perk Image: $assetUrl");
+    var url = await storage.ref().child(assetUrl).getDownloadURL();
+    return url; 
+  }
+}
+
 void main() async {
-  final FirebaseApp app = await FirebaseApp.configure(
-    name: 'DBDR',
-    options: new FirebaseOptions(
-      googleAppID: Platform.isIOS
-          ? '1:612079491419:ios:472df683bdd23490'
-          : '1:612079491419:android:472df683bdd23490',
-      gcmSenderID: '612079491419',
-      apiKey: 'AIzaSyAf4e2fO674CDoZ66LQxjqi5wvV2yR_SlM',
-      projectID: 'dbdr-6fbb1',
-    ),
-  );
-  final FirebaseStorage storage = new FirebaseStorage(
-      app: app, storageBucket: 'gs://dbdr-6fbb1.appspot.com');
-  runApp(new MyApp(storage: storage));
-  // runApp(new MyApp());
+  // final FirebaseApp app = await FirebaseApp.configure(
+  //   name: 'DBDR',
+  //   options: new FirebaseOptions(
+  //     googleAppID: Platform.isIOS
+  //         ? '1:612079491419:ios:472df683bdd23490'
+  //         : '1:612079491419:android:472df683bdd23490',
+  //     gcmSenderID: '612079491419',
+  //     apiKey: 'AIzaSyAf4e2fO674CDoZ66LQxjqi5wvV2yR_SlM',
+  //     projectID: 'dbdr-6fbb1',
+  //   ),
+  // );
+  // final FirebaseStorage storage = new FirebaseStorage(
+  //     app: app, storageBucket: 'gs://dbdr-6fbb1.appspot.com');
+  // runApp(new MyApp(storage: storage));
+  DBDRStorageManager.sharedInstance.initialize();
+  runApp(new MyApp());
 
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({this.storage});
-  final FirebaseStorage storage;
-  // const MyApp();
+  // MyApp({this.storage});
+  // final FirebaseStorage storage;
+  const MyApp();
 
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
       title: 'DBDR',
-      home: MyHomePage(title: 'DBDR', storage: storage,),
-      // home: MyHomePage(title: 'DBDR'),
+      // home: MyHomePage(title: 'DBDR', storage: storage,),
+      home: MyHomePage(title: 'DBDR'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key key, this.title, this.storage}) : super(key: key);
-  // const MyHomePage({Key key, this.title}) : super(key: key);
+  // const MyHomePage({Key key, this.title, this.storage}) : super(key: key);
+  const MyHomePage({Key key, this.title}) : super(key: key);
 
 
   final String title;
@@ -64,13 +93,7 @@ class MyHomePageState extends State<MyHomePage> {
   List<Perk> perks = [];
   List<Perk> perkBuild = [];
   int numPerks = 4;
-  String perkImageUrl = "";
-
-  Future<String> getPerkURL() async {
-    var url = await widget.storage.ref().child('/images/perks/ace_in_the_hole.png').getDownloadURL();
-    print(url);
-    return url;
-  }
+  List<String> perkImageUrls = [];
 
   @override
   void initState() {
@@ -85,11 +108,6 @@ class MyHomePageState extends State<MyHomePage> {
         });
       }
     });
-    getPerkURL().then((url) {
-      setState(() {
-        perkImageUrl = url;
-      });
-    });
     super.initState();
   }
 
@@ -100,8 +118,16 @@ class MyHomePageState extends State<MyHomePage> {
       var randomIndex = Random().nextInt(perks.length);
       // Ensure that we never get the same perk in the same slot
       while (selected.contains(randomIndex)) {randomIndex = Random().nextInt(perks.length);}
-      newPerkBuild.add(perks[randomIndex]);
+      var perkToAdd = perks[randomIndex];
+      DBDRStorageManager.sharedInstance.getPerkImageURL(perkToAdd).then((image) {
+        setState(() {
+          perkToAdd.thumbnail = image;
+          // perkBuild[i] = perkToAdd;
+        });
+      });
+      newPerkBuild.add(perkToAdd);
       selected.add(randomIndex);
+
     }
     setState(() {
       perkBuild = newPerkBuild;
@@ -113,7 +139,7 @@ class MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     var columnChildren = List<Widget>();
     if (perkBuild.length == numPerks) {
-      columnChildren = perkBuild.map((perk) => PerkSlotView(perk: perk, image: perkImageUrl)).toList();
+      columnChildren = perkBuild.map((perk) => PerkSlotView(perk: perk)).toList();
     }
     return new Scaffold(
       appBar: new AppBar(title: new Text(widget.title)),
@@ -132,9 +158,8 @@ class MyHomePageState extends State<MyHomePage> {
 }
 
 class PerkSlotView extends StatelessWidget {
-  const PerkSlotView({Key key, this.perk, this.image}) : super(key: key);
+  const PerkSlotView({Key key, this.perk}) : super(key: key);
   final Perk perk;
-  final String image;
 
   @override
   Widget build(BuildContext context) {
@@ -146,12 +171,14 @@ class PerkSlotView extends StatelessWidget {
           padding: const EdgeInsets.all(8.0),
           child: Column(
             children: <Widget>[
-              new FadeInImage.memoryNetwork(
-                image: image,
-                placeholder: kTransparentImage,
+              new Expanded(
+              child: new FadeInImage.memoryNetwork(
+                  image: perk.thumbnail,
+                  placeholder: kTransparentImage,
+                ),
               ),
               new Text(perk.name, style: Theme.of(context).textTheme.headline,), 
-              new Text(perk.description, style: Theme.of(context).textTheme.body1)
+              // new Text(perk.description, style: Theme.of(context).textTheme.body1)
             ],
           ),
         ),

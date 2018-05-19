@@ -1,12 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Perk {
-  String name;
-  String description;
+  String id, name, description;
+  String thumbnail = "";
 
-  Perk(this.name, this.description);
+  Perk(this.id, this.name, this.description);
 
   Perk.fromDocument(DocumentSnapshot document) {
+    id = document.documentID;
     name = document['name'];
     description = document['description'];
   }
