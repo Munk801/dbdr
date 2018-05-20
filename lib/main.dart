@@ -210,34 +210,35 @@ class PerkBuildView extends StatelessWidget {
     return new LayoutBuilder(
       builder: (layoutContext, constraints) {
         var width = constraints.maxWidth / 2;
+        var height = constraints.maxHeight / 3.33;
         var top = 0.0;
         var topLeft = (constraints.maxWidth / 2) - (width / 2);
-        var midTop = top + (width);
-        var bottomTop = midTop + (width);
+        var midTop = top + (height);
+        var bottomTop = midTop + (height);
         return new Stack(alignment: AlignmentDirectional.center, children: [
           new Positioned(
               top: top,
               left: topLeft,
               width: width,
-              height: width,
+              height: height,
               child: columnChildren[0]),
           new Positioned(
               top: midTop,
               left: 0.5,
               width: width,
-              height: width,
+              height: height,
               child: columnChildren[1]),
           new Positioned(
               top: midTop,
               left: width,
               width: width,
-              height: width,
+              height: height,
               child: columnChildren[2]),
           new Positioned(
               top: bottomTop,
               left: topLeft,
               width: width,
-              height: width,
+              height: height,
               child: columnChildren[3]),
         ]);
       },
@@ -254,69 +255,103 @@ class PerkSlotView extends StatelessWidget {
     return new Padding(
       padding: const EdgeInsets.all(5.0),
       child: new GestureDetector(
-          onTap: () {
-            showModalBottomSheet(
-                context: context,
-                builder: (buildContext) {
-                  return new Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: new Container(
-                      color: Colors.grey,
-                      child: new Column(
-                        children: <Widget>[
-                          new Expanded(
-                            child: new FadeInImage.memoryNetwork(
-                              image: perk.thumbnail,
-                              placeholder: kTransparentImage,
-                            ),
-                          ),
-                          new Text(
-                            perk.name.toUpperCase(),
-                            style: Theme.of(context).textTheme.headline,
-                          ),
-                          new Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: new Text(
-                              perk.description,
-                              style: Theme.of(context).textTheme.body1,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                });
-          },
-          child: Card(
+        onTap: () {
+          showModalBottomSheet(
+              context: context,
+              builder: (buildContext) {
+                return new PerkDescriptionSheet(perk);
+              });
+        },
+        child: Card(
             // shape: const _DiamondBorder(),
             color: Theme.of(context).cardColor,
             elevation: 8.0,
             child: new Padding(
               padding: const EdgeInsets.all(8.0),
-              child: new Column(
-                children: <Widget>[
-                  new Expanded(
-                    child: new FadeInImage.memoryNetwork(
-                      image: perk.thumbnail,
-                      placeholder: kTransparentImage,
+              child: new Stack(
+                children: [
+                new Column(
+                  children: <Widget>[
+                    new Expanded(
+                      child: new FadeInImage.memoryNetwork(
+                        image: perk.thumbnail,
+                        placeholder: kTransparentImage,
+                      ),
                     ),
-                  ),
-                  new Text(
-                    perk.name,
-                    style: Theme.of(context).textTheme.caption,
-                  ),
-                ],
+                    new Text(
+                      perk.name.toUpperCase(),
+                      style: Theme.of(context).textTheme.caption,
+                    ),
+                  ],
+                ),
+                new Align(
+                  alignment: Alignment.topRight,
+                  child: new IconButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        new MaterialPageRoute(builder: (context) => new PerkListView()),
+                      );
+                    }, 
+                    icon: const Icon(Icons.list)
+                  )
+                ),
+              ]
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class PerkDescriptionSheet extends StatelessWidget {
+  final Perk perk;
+
+  PerkDescriptionSheet(this.perk);
+
+  @override
+  Widget build(BuildContext context) {
+    return new Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: new Container(
+        color: Colors.grey,
+        child: new Column(
+          children: <Widget>[
+            new Expanded(
+              child: new FadeInImage.memoryNetwork(
+                image: perk.thumbnail,
+                placeholder: kTransparentImage,
               ),
             ),
-          )),
+            new Text(
+              perk.name.toUpperCase(),
+              style: Theme.of(context).textTheme.headline,
+            ),
+            new Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: new Text(
+                perk.description,
+                style: Theme.of(context).textTheme.body1,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
 class PerkListView extends StatelessWidget {
+  final List<Perk> perks;
+
+  PerkListView({this.perks});
+
   @override
   Widget build(BuildContext context) {
-    return new StreamBuilder(
+    return new Scaffold(
+      appBar: new AppBar(leading: new BackButton(), centerTitle: true, title: const Text('Select Perk'),),
+      body: new StreamBuilder(
         stream: Firestore.instance.collection('perks').snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const Text('Loading...');
@@ -326,8 +361,10 @@ class PerkListView extends StatelessWidget {
               itemExtent: 55.0,
               itemBuilder: (context, index) {
                 DocumentSnapshot ds = snapshot.data.documents[index];
-                return new Text(" ${ds['name']} ${ds['description']}");
+                Perk perk = Perk.fromDocument(ds);
+                return new Card(child: new Row(children: <Widget>[new Text(perk.name.toUpperCase())]));
               });
-        });
+        })
+    );
   }
 }
