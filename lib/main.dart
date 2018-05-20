@@ -197,8 +197,8 @@ class PerkBuildView extends StatelessWidget {
         var width = constraints.maxWidth / 2;
         var top = 0.0;
         var topLeft = (constraints.maxWidth / 2) - (width / 2); 
-        var midTop = top + (width / 2);
-        var bottomTop = midTop + (width/2);
+        var midTop = top + (width);
+        var bottomTop = midTop + (width);
         return new Stack(
           alignment: AlignmentDirectional.center,
           children: [
@@ -222,7 +222,7 @@ class PerkSlotView extends StatelessWidget {
     return new Padding(
       padding: const EdgeInsets.all(5.0),
       child: new Card(
-        shape: const _DiamondBorder(),
+        // shape: const _DiamondBorder(),
         color: Theme.of(context).cardColor,
         elevation: 8.0,
         child: new Padding(
