@@ -40,42 +40,31 @@ class DBDRStorageManager {
 }
 
 void main() async {
-  // final FirebaseApp app = await FirebaseApp.configure(
-  //   name: 'DBDR',
-  //   options: new FirebaseOptions(
-  //     googleAppID: Platform.isIOS
-  //         ? '1:612079491419:ios:472df683bdd23490'
-  //         : '1:612079491419:android:472df683bdd23490',
-  //     gcmSenderID: '612079491419',
-  //     apiKey: 'AIzaSyAf4e2fO674CDoZ66LQxjqi5wvV2yR_SlM',
-  //     projectID: 'dbdr-6fbb1',
-  //   ),
-  // );
-  // final FirebaseStorage storage = new FirebaseStorage(
-  //     app: app, storageBucket: 'gs://dbdr-6fbb1.appspot.com');
-  // runApp(new MyApp(storage: storage));
   DBDRStorageManager.sharedInstance.initialize();
   runApp(new MyApp());
 
 }
+ThemeData _buildTheme() {
+  final ThemeData base = ThemeData.dark();
+  return base.copyWith(
+    // cardColor: Colors.grey,
+  );
+}
 
 class MyApp extends StatelessWidget {
-  // MyApp({this.storage});
-  // final FirebaseStorage storage;
   const MyApp();
 
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
       title: 'DBDR',
-      // home: MyHomePage(title: 'DBDR', storage: storage,),
       home: MyHomePage(title: 'DBDR'),
+      theme: _buildTheme(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  // const MyHomePage({Key key, this.title, this.storage}) : super(key: key);
   const MyHomePage({Key key, this.title}) : super(key: key);
 
 
@@ -119,15 +108,14 @@ class MyHomePageState extends State<MyHomePage> {
       // Ensure that we never get the same perk in the same slot
       while (selected.contains(randomIndex)) {randomIndex = Random().nextInt(perks.length);}
       var perkToAdd = perks[randomIndex];
+      // Retrieve the perk image and add it to the perk
       DBDRStorageManager.sharedInstance.getPerkImageURL(perkToAdd).then((image) {
         setState(() {
           perkToAdd.thumbnail = image;
-          // perkBuild[i] = perkToAdd;
         });
       });
       newPerkBuild.add(perkToAdd);
       selected.add(randomIndex);
-
     }
     setState(() {
       perkBuild = newPerkBuild;
@@ -150,6 +138,7 @@ class MyHomePageState extends State<MyHomePage> {
             children: columnChildren,
           )),
       floatingActionButton: new FloatingActionButton(
+        child: const Icon(Icons.swap_calls),
         onPressed: _randomizePerks,
         backgroundColor: Colors.redAccent,
       ),
@@ -166,6 +155,7 @@ class PerkSlotView extends StatelessWidget {
     return new Padding(
       padding: const EdgeInsets.all(5.0),
       child: new Card(
+        color: Theme.of(context).cardColor,
         elevation: 8.0,
         child: new Padding(
           padding: const EdgeInsets.all(8.0),
@@ -178,7 +168,6 @@ class PerkSlotView extends StatelessWidget {
                 ),
               ),
               new Text(perk.name, style: Theme.of(context).textTheme.headline,), 
-              // new Text(perk.description, style: Theme.of(context).textTheme.body1)
             ],
           ),
         ),
