@@ -3,7 +3,7 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:io';
 
-// External Packages 
+// External Packages
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -12,7 +12,6 @@ import 'package:transparent_image/transparent_image.dart';
 
 // Internal Packages
 import 'perk.dart';
-
 
 class _DiamondBorder extends ShapeBorder {
   const _DiamondBorder();
@@ -23,22 +22,22 @@ class _DiamondBorder extends ShapeBorder {
   }
 
   @override
-  Path getInnerPath(Rect rect, { TextDirection textDirection }) {
+  Path getInnerPath(Rect rect, {TextDirection textDirection}) {
     return getOuterPath(rect, textDirection: textDirection);
   }
 
   @override
-  Path getOuterPath(Rect rect, { TextDirection textDirection }) {
+  Path getOuterPath(Rect rect, {TextDirection textDirection}) {
     return new Path()
       ..moveTo(rect.left + rect.width / 2.0, rect.top)
       ..lineTo(rect.right, rect.top + rect.height / 2.0)
-      ..lineTo(rect.left + rect.width  / 2.0, rect.bottom)
+      ..lineTo(rect.left + rect.width / 2.0, rect.bottom)
       ..lineTo(rect.left, rect.top + rect.height / 2.0)
       ..close();
   }
 
   @override
-  void paint(Canvas canvas, Rect rect, { TextDirection textDirection }) {}
+  void paint(Canvas canvas, Rect rect, {TextDirection textDirection}) {}
 
   // This border doesn't support scaling.
   @override
@@ -52,7 +51,8 @@ class DBDRStorageManager {
   FirebaseStorage storage;
 
   Future<Null> initialize() async {
-    await FirebaseApp.configure(
+    await FirebaseApp
+        .configure(
       name: 'DBDR',
       options: new FirebaseOptions(
         googleAppID: Platform.isIOS
@@ -62,29 +62,31 @@ class DBDRStorageManager {
         apiKey: 'AIzaSyAf4e2fO674CDoZ66LQxjqi5wvV2yR_SlM',
         projectID: 'dbdr-6fbb1',
       ),
-    ).then((app) {
-      this.storage = new FirebaseStorage(app: app, storageBucket: 'gs://dbdr-6fbb1.appspot.com');
+    )
+        .then((app) {
+      this.storage = new FirebaseStorage(
+          app: app, storageBucket: 'gs://dbdr-6fbb1.appspot.com');
     });
   }
 
   Future<String> getPerkImageURL(Perk perk) async {
-    var assetUrl =  '/images/perks/${perk.id}.png';
+    var assetUrl = '/images/perks/${perk.id}.png';
     print("Perk Image: $assetUrl");
     var url = await storage.ref().child(assetUrl).getDownloadURL();
-    return url; 
+    return url;
   }
 }
 
 void main() async {
   DBDRStorageManager.sharedInstance.initialize();
   runApp(new MyApp());
-
 }
+
 ThemeData _buildTheme() {
   final ThemeData base = ThemeData.dark();
   return base.copyWith(
-    // cardColor: Colors.grey,
-  );
+      // cardColor: Colors.grey,
+      );
 }
 
 class MyApp extends StatelessWidget {
@@ -103,10 +105,8 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key key, this.title}) : super(key: key);
 
-
   final String title;
   final FirebaseStorage storage;
-
 
   @override
   MyHomePageState createState() {
@@ -144,13 +144,17 @@ class MyHomePageState extends State<MyHomePage> {
   void _randomizePerks() {
     List<Perk> newPerkBuild = [];
     List<int> selected = [];
-    for (var i = 0; i < 4; i ++) {
+    for (var i = 0; i < 4; i++) {
       var randomIndex = Random().nextInt(perks.length);
       // Ensure that we never get the same perk in the same slot
-      while (selected.contains(randomIndex)) {randomIndex = Random().nextInt(perks.length);}
+      while (selected.contains(randomIndex)) {
+        randomIndex = Random().nextInt(perks.length);
+      }
       var perkToAdd = perks[randomIndex];
       // Retrieve the perk image and add it to the perk
-      DBDRStorageManager.sharedInstance.getPerkImageURL(perkToAdd).then((image) {
+      DBDRStorageManager.sharedInstance
+          .getPerkImageURL(perkToAdd)
+          .then((image) {
         setState(() {
           perkToAdd.thumbnail = image;
         });
@@ -161,25 +165,36 @@ class MyHomePageState extends State<MyHomePage> {
     setState(() {
       perkBuild = newPerkBuild;
     });
-
   }
 
   @override
   Widget build(BuildContext context) {
     var columnChildren = List<Widget>();
     if (perkBuild.length == numPerks) {
-      columnChildren = perkBuild.map((perk) => PerkSlotView(perk: perk)).toList();
-    }    
+      columnChildren =
+          perkBuild.map((perk) => PerkSlotView(perk: perk)).toList();
+    }
     return new Scaffold(
       appBar: new AppBar(title: new Text(widget.title)),
       body: new Container(
-          color: Colors.white,
-          child: new PerkBuildView(columnChildren),
+        color: Colors.white,
+        child: new Stack(
+          children: [
+            PerkBuildView(columnChildren),
+            new Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: new Align(
+                alignment: Alignment.bottomCenter,
+                child: new RaisedButton.icon(
+                  onPressed: _randomizePerks,
+                  color: Colors.red,
+                  icon: const Icon(Icons.swap_calls),
+                  label: new Text("Randomize".toUpperCase()),
+                ),
+              ),
+            )
+          ],
         ),
-      floatingActionButton: new FloatingActionButton(
-        child: const Icon(Icons.swap_calls),
-        onPressed: _randomizePerks,
-        backgroundColor: Colors.redAccent,
       ),
     );
   }
@@ -196,20 +211,37 @@ class PerkBuildView extends StatelessWidget {
       builder: (layoutContext, constraints) {
         var width = constraints.maxWidth / 2;
         var top = 0.0;
-        var topLeft = (constraints.maxWidth / 2) - (width / 2); 
+        var topLeft = (constraints.maxWidth / 2) - (width / 2);
         var midTop = top + (width);
         var bottomTop = midTop + (width);
-        return new Stack(
-          alignment: AlignmentDirectional.center,
-          children: [
-            new Positioned(top: top, left: topLeft, width: width, height: width, child: columnChildren[0]),
-            new Positioned(top: midTop, left: 0.5, width: width, height: width, child: columnChildren[1]),
-            new Positioned(top: midTop, left: width, width: width, height: width, child: columnChildren[2]),
-            new Positioned(top: bottomTop, left: topLeft, width: width, height: width, child: columnChildren[3]),
-          ]
-        );
-
-    },);
+        return new Stack(alignment: AlignmentDirectional.center, children: [
+          new Positioned(
+              top: top,
+              left: topLeft,
+              width: width,
+              height: width,
+              child: columnChildren[0]),
+          new Positioned(
+              top: midTop,
+              left: 0.5,
+              width: width,
+              height: width,
+              child: columnChildren[1]),
+          new Positioned(
+              top: midTop,
+              left: width,
+              width: width,
+              height: width,
+              child: columnChildren[2]),
+          new Positioned(
+              top: bottomTop,
+              left: topLeft,
+              width: width,
+              height: width,
+              child: columnChildren[3]),
+        ]);
+      },
+    );
   }
 }
 
@@ -220,27 +252,37 @@ class PerkSlotView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new Padding(
-      padding: const EdgeInsets.all(5.0),
-      child: new Card(
-        // shape: const _DiamondBorder(),
-        color: Theme.of(context).cardColor,
-        elevation: 8.0,
-        child: new Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: <Widget>[
-              new Expanded(
-              child: new FadeInImage.memoryNetwork(
-                  image: perk.thumbnail,
-                  placeholder: kTransparentImage,
+        padding: const EdgeInsets.all(5.0),
+        child: new GestureDetector(
+          onTap: () {
+            showModalBottomSheet(context: context, builder: (buildContext) {
+              return Container(color: Colors.red);
+            });
+          },
+          child: Card(
+          // shape: const _DiamondBorder(),
+          color: Theme.of(context).cardColor,
+          elevation: 8.0,
+          child: new Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: <Widget>[
+                new Expanded(
+                  child: new FadeInImage.memoryNetwork(
+                    image: perk.thumbnail,
+                    placeholder: kTransparentImage,
+                  ),
                 ),
-              ),
-              new Text(perk.name, style: Theme.of(context).textTheme.caption,), 
-            ],
+                new Text(
+                  perk.name,
+                  style: Theme.of(context).textTheme.caption,
+                ),
+              ],
+            ),
           ),
+        )
         ),
-      )
-    );
+    ); 
   }
 }
 
