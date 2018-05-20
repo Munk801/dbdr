@@ -252,37 +252,64 @@ class PerkSlotView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new Padding(
-        padding: const EdgeInsets.all(5.0),
-        child: new GestureDetector(
+      padding: const EdgeInsets.all(5.0),
+      child: new GestureDetector(
           onTap: () {
-            showModalBottomSheet(context: context, builder: (buildContext) {
-              return Container(color: Colors.red);
-            });
+            showModalBottomSheet(
+                context: context,
+                builder: (buildContext) {
+                  return new Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: new Container(
+                      color: Colors.grey,
+                      child: new Column(
+                        children: <Widget>[
+                          new Expanded(
+                            child: new FadeInImage.memoryNetwork(
+                              image: perk.thumbnail,
+                              placeholder: kTransparentImage,
+                            ),
+                          ),
+                          new Text(
+                            perk.name.toUpperCase(),
+                            style: Theme.of(context).textTheme.headline,
+                          ),
+                          new Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: new Text(
+                              perk.description,
+                              style: Theme.of(context).textTheme.body1,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                });
           },
           child: Card(
-          // shape: const _DiamondBorder(),
-          color: Theme.of(context).cardColor,
-          elevation: 8.0,
-          child: new Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: <Widget>[
-                new Expanded(
-                  child: new FadeInImage.memoryNetwork(
-                    image: perk.thumbnail,
-                    placeholder: kTransparentImage,
+            // shape: const _DiamondBorder(),
+            color: Theme.of(context).cardColor,
+            elevation: 8.0,
+            child: new Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: new Column(
+                children: <Widget>[
+                  new Expanded(
+                    child: new FadeInImage.memoryNetwork(
+                      image: perk.thumbnail,
+                      placeholder: kTransparentImage,
+                    ),
                   ),
-                ),
-                new Text(
-                  perk.name,
-                  style: Theme.of(context).textTheme.caption,
-                ),
-              ],
+                  new Text(
+                    perk.name,
+                    style: Theme.of(context).textTheme.caption,
+                  ),
+                ],
+              ),
             ),
-          ),
-        )
-        ),
-    ); 
+          )),
+    );
   }
 }
 
