@@ -1,15 +1,51 @@
-// Packages
+// Dart
 import 'dart:async';
 import 'dart:math';
 import 'dart:io';
+
+// External Packages 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:transparent_image/transparent_image.dart';
 
-// Internal
+// Internal Packages
 import 'perk.dart';
+
+
+class _DiamondBorder extends ShapeBorder {
+  const _DiamondBorder();
+
+  @override
+  EdgeInsetsGeometry get dimensions {
+    return const EdgeInsets.only();
+  }
+
+  @override
+  Path getInnerPath(Rect rect, { TextDirection textDirection }) {
+    return getOuterPath(rect, textDirection: textDirection);
+  }
+
+  @override
+  Path getOuterPath(Rect rect, { TextDirection textDirection }) {
+    return new Path()
+      ..moveTo(rect.left + rect.width / 2.0, rect.top)
+      ..lineTo(rect.right, rect.top + rect.height / 2.0)
+      ..lineTo(rect.left + rect.width  / 2.0, rect.bottom)
+      ..lineTo(rect.left, rect.top + rect.height / 2.0)
+      ..close();
+  }
+
+  @override
+  void paint(Canvas canvas, Rect rect, { TextDirection textDirection }) {}
+
+  // This border doesn't support scaling.
+  @override
+  ShapeBorder scale(double t) {
+    return null;
+  }
+}
 
 class DBDRStorageManager {
   static final sharedInstance = new DBDRStorageManager();
@@ -97,6 +133,11 @@ class MyHomePageState extends State<MyHomePage> {
         });
       }
     });
+    for (var i = 0; i < 4; i++) {
+      setState(() {
+        perkBuild.add(new Perk.empty());
+      });
+    }
     super.initState();
   }
 
@@ -128,21 +169,47 @@ class MyHomePageState extends State<MyHomePage> {
     var columnChildren = List<Widget>();
     if (perkBuild.length == numPerks) {
       columnChildren = perkBuild.map((perk) => PerkSlotView(perk: perk)).toList();
-    }
+    }    
     return new Scaffold(
       appBar: new AppBar(title: new Text(widget.title)),
       body: new Container(
           color: Colors.white,
-          child: new GridView.count(
-            crossAxisCount: 2,
-            children: columnChildren,
-          )),
+          child: new PerkBuildView(columnChildren),
+        ),
       floatingActionButton: new FloatingActionButton(
         child: const Icon(Icons.swap_calls),
         onPressed: _randomizePerks,
         backgroundColor: Colors.redAccent,
       ),
     );
+  }
+}
+
+class PerkBuildView extends StatelessWidget {
+  final List<Widget> columnChildren;
+
+  PerkBuildView(this.columnChildren);
+
+  @override
+  Widget build(BuildContext context) {
+    return new LayoutBuilder(
+      builder: (layoutContext, constraints) {
+        var width = constraints.maxWidth / 2;
+        var top = 0.0;
+        var topLeft = (constraints.maxWidth / 2) - (width / 2); 
+        var midTop = top + (width / 2);
+        var bottomTop = midTop + (width/2);
+        return new Stack(
+          alignment: AlignmentDirectional.center,
+          children: [
+            new Positioned(top: top, left: topLeft, width: width, height: width, child: columnChildren[0]),
+            new Positioned(top: midTop, left: 0.5, width: width, height: width, child: columnChildren[1]),
+            new Positioned(top: midTop, left: width, width: width, height: width, child: columnChildren[2]),
+            new Positioned(top: bottomTop, left: topLeft, width: width, height: width, child: columnChildren[3]),
+          ]
+        );
+
+    },);
   }
 }
 
@@ -155,6 +222,7 @@ class PerkSlotView extends StatelessWidget {
     return new Padding(
       padding: const EdgeInsets.all(5.0),
       child: new Card(
+        shape: const _DiamondBorder(),
         color: Theme.of(context).cardColor,
         elevation: 8.0,
         child: new Padding(
@@ -167,7 +235,7 @@ class PerkSlotView extends StatelessWidget {
                   placeholder: kTransparentImage,
                 ),
               ),
-              new Text(perk.name, style: Theme.of(context).textTheme.headline,), 
+              new Text(perk.name, style: Theme.of(context).textTheme.caption,), 
             ],
           ),
         ),
