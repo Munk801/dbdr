@@ -134,12 +134,23 @@ class MyHomePageState extends State<MyHomePage> {
       }
     });
     for (var i = 0; i < 4; i++) {
-      setState(() {
-        perkBuild.add(new Perk.empty());
-      });
+      perkBuild.add(new Perk.empty());
     }
     super.initState();
   }
+
+   _navigateAndDisplayPerkListView(BuildContext context, int index) async {
+    var result = await Navigator.push(
+      context,
+      new MaterialPageRoute(
+          builder: (context) => new PerkListView()
+      ),
+    );
+    if (result == null) { return; }
+    setState(() {
+      perkBuild[index] = result;
+    });
+ } 
 
   void _randomizePerks() {
     List<Perk> newPerkBuild = [];
@@ -169,10 +180,10 @@ class MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    var columnChildren = List<Widget>();
-    if (perkBuild.length == numPerks) {
-      columnChildren =
-          perkBuild.map((perk) => PerkSlotView(perk: perk)).toList();
+    var perkSlotViews = List<Widget>();
+    for (var i = 0; i < 4; i ++) {
+      var slotView = new PerkSlotView(perk: perkBuild[i], index: i, onListPressed: (index) => _navigateAndDisplayPerkListView(context, index));
+      perkSlotViews.add(slotView);
     }
     return new Scaffold(
       appBar: new AppBar(title: new Text(widget.title)),
@@ -180,7 +191,7 @@ class MyHomePageState extends State<MyHomePage> {
         color: Colors.white,
         child: new Stack(
           children: [
-            PerkBuildView(columnChildren),
+            new PerkBuildView(perkSlotViews),
             new Padding(
               padding: const EdgeInsets.all(20.0),
               child: new Align(
@@ -246,33 +257,15 @@ class PerkBuildView extends StatelessWidget {
   }
 }
 
-class PerkSlotView extends StatefulWidget {
-  PerkSlotView({Key key, this.perk}) : super(key: key);
+class PerkSlotView extends StatelessWidget {
+  const PerkSlotView({Key key, this.perk, this.index, this.onListPressed}) : super(key: key);
   final Perk perk;
+  final int index;
+  final ValueChanged<int> onListPressed;
 
-  @override
-  PerkSlotViewState createState() {
-    return new PerkSlotViewState(perk: perk);
+  void _handleTap() {
+    onListPressed(index);
   }
-}
-
-class PerkSlotViewState extends State<PerkSlotView> {
-  PerkSlotViewState({Key key, this.perk});
-  Perk perk;
-
- _navigateAndDisplayPerkListView(BuildContext context) async {
-    var result = await Navigator.push(
-      context,
-      new MaterialPageRoute(
-          builder: (context) => new PerkListView()
-      ),
-    );
-    setState(() {
-      perk = result;
-    });
- } 
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -310,7 +303,7 @@ class PerkSlotViewState extends State<PerkSlotView> {
               new Align(
                   alignment: Alignment.topRight,
                   child: new IconButton(
-                      onPressed: () => _navigateAndDisplayPerkListView(context),
+                      onPressed: _handleTap,
                       icon: const Icon(Icons.list))),
             ]),
           ),
