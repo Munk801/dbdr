@@ -139,18 +139,18 @@ class MyHomePageState extends State<MyHomePage> {
     super.initState();
   }
 
-   _navigateAndDisplayPerkListView(BuildContext context, int index) async {
+  _navigateAndDisplayPerkListView(BuildContext context, int index) async {
     var result = await Navigator.push(
       context,
-      new MaterialPageRoute(
-          builder: (context) => new PerkListView()
-      ),
+      new MaterialPageRoute(builder: (context) => new PerkListView()),
     );
-    if (result == null) { return; }
+    if (result == null) {
+      return;
+    }
     setState(() {
       perkBuild[index] = result;
     });
- } 
+  }
 
   void _randomizePerks() {
     List<Perk> newPerkBuild = [];
@@ -181,8 +181,12 @@ class MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     var perkSlotViews = List<Widget>();
-    for (var i = 0; i < 4; i ++) {
-      var slotView = new PerkSlotView(perk: perkBuild[i], index: i, onListPressed: (index) => _navigateAndDisplayPerkListView(context, index));
+    for (var i = 0; i < 4; i++) {
+      var slotView = new PerkSlotView(
+          perk: perkBuild[i],
+          index: i,
+          onListPressed: (index) =>
+              _navigateAndDisplayPerkListView(context, index));
       perkSlotViews.add(slotView);
     }
     return new Scaffold(
@@ -258,7 +262,8 @@ class PerkBuildView extends StatelessWidget {
 }
 
 class PerkSlotView extends StatelessWidget {
-  const PerkSlotView({Key key, this.perk, this.index, this.onListPressed}) : super(key: key);
+  const PerkSlotView({Key key, this.perk, this.index, this.onListPressed})
+      : super(key: key);
   final Perk perk;
   final int index;
   final ValueChanged<int> onListPressed;
@@ -303,8 +308,7 @@ class PerkSlotView extends StatelessWidget {
               new Align(
                   alignment: Alignment.topRight,
                   child: new IconButton(
-                      onPressed: _handleTap,
-                      icon: const Icon(Icons.list))),
+                      onPressed: _handleTap, icon: const Icon(Icons.list))),
             ]),
           ),
         ),
@@ -374,41 +378,52 @@ class PerkListView extends StatelessWidget {
                   itemBuilder: (context, index) {
                     DocumentSnapshot ds = snapshot.data.documents[index];
                     Perk perk = Perk.fromDocument(ds);
-                    DBDRStorageManager.sharedInstance
-                        .getPerkImageURL(perk)
-                        .then((image) {
-                      perk.thumbnail = image;
-                    });
                     return new PerkListViewCell(perk);
                   });
             }));
   }
 }
 
-class PerkListViewCell extends StatelessWidget {
+class PerkListViewCell extends StatefulWidget {
   final Perk perk;
 
   PerkListViewCell(this.perk);
 
   @override
+  PerkListViewCellState createState() {
+    return new PerkListViewCellState();
+  }
+}
+
+class PerkListViewCellState extends State<PerkListViewCell> {
+  @override
+  void initState() {
+    DBDRStorageManager.sharedInstance
+        .getPerkImageURL(widget.perk)
+        .then((image) {
+      setState(() {
+        widget.perk.thumbnail = image;
+      });
+    });
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return new GestureDetector(
       onTap: () {
-        Navigator.pop(context, perk);
+        Navigator.pop(context, widget.perk);
       },
       child: new Card(
-        child: new Row(
-          children: <Widget>[
-            new FadeInImage.memoryNetwork(
-              image: perk.thumbnail,
-              placeholder: kTransparentImage,
-            ),
-            new Expanded( 
-              child: new Text(perk.name.toUpperCase()),
-            )
-          ]
+          child: new Row(children: <Widget>[
+        new FadeInImage.memoryNetwork(
+          image: widget.perk.thumbnail,
+          placeholder: kTransparentImage,
+        ),
+        new Expanded(
+          child: new Text(widget.perk.name.toUpperCase()),
         )
-      ),
+      ])),
     );
   }
 }
