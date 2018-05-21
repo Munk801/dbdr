@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:transparent_image/transparent_image.dart';
 
 // Internal Packages
+import 'constants.dart';
 import 'perk.dart';
 
 class _DiamondBorder extends ShapeBorder {
@@ -71,7 +72,6 @@ class DBDRStorageManager {
 
   Future<String> getPerkImageURL(Perk perk) async {
     var assetUrl = '/images/perks/${perk.id}.png';
-    print("Perk Image: $assetUrl");
     var url = await storage.ref().child(assetUrl).getDownloadURL();
     return url;
   }
@@ -85,8 +85,9 @@ void main() async {
 ThemeData _buildTheme() {
   final ThemeData base = ThemeData.dark();
   return base.copyWith(
+    accentColor: kDbdRed,
       // cardColor: Colors.grey,
-      );
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -152,7 +153,7 @@ class MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _randomizePerks() {
+  _randomizePerks() {
     List<Perk> newPerkBuild = [];
     List<int> selected = [];
     for (var i = 0; i < 4; i++) {
@@ -192,25 +193,21 @@ class MyHomePageState extends State<MyHomePage> {
     return new Scaffold(
       appBar: new AppBar(title: new Text(widget.title)),
       body: new Container(
-        color: Colors.white,
+        color: Theme.of(context).backgroundColor,
         child: new Stack(
           children: [
             new PerkBuildView(perkSlotViews),
-            new Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: new Align(
-                alignment: Alignment.bottomCenter,
-                child: new RaisedButton.icon(
-                  onPressed: _randomizePerks,
-                  color: Colors.red,
-                  icon: const Icon(Icons.swap_calls),
-                  label: new Text("Randomize".toUpperCase()),
-                ),
-              ),
-            )
           ],
         ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: new FloatingActionButton.extended(
+        onPressed: _randomizePerks,
+        backgroundColor: Theme.of(context).accentColor,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.swap_calls),
+        label: new Text("Randomize".toUpperCase()),
+      )
     );
   }
 }
@@ -286,7 +283,7 @@ class PerkSlotView extends StatelessWidget {
         },
         child: Card(
           // shape: const _DiamondBorder(),
-          color: Theme.of(context).cardColor,
+          color: Theme.of(context).primaryColor,
           elevation: 8.0,
           child: new Padding(
             padding: const EdgeInsets.all(5.0),
@@ -301,6 +298,7 @@ class PerkSlotView extends StatelessWidget {
                   ),
                   new Text(
                     perk.name.toUpperCase(),
+                    textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.caption,
                   ),
                 ],

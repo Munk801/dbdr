@@ -10,7 +10,8 @@ dependencies:
   cupertino_icons: ^0.1.0
   cloud_firestore: ^0.7.2
   transparent_image:
-  firebase_storage:
+  firebase_storage: ^0.3.5
+  firebase_auth: ^0.5.10
 
 dev_dependencies:
   flutter_test:
