@@ -246,9 +246,33 @@ class PerkBuildView extends StatelessWidget {
   }
 }
 
-class PerkSlotView extends StatelessWidget {
-  const PerkSlotView({Key key, this.perk}) : super(key: key);
+class PerkSlotView extends StatefulWidget {
+  PerkSlotView({Key key, this.perk}) : super(key: key);
   final Perk perk;
+
+  @override
+  PerkSlotViewState createState() {
+    return new PerkSlotViewState(perk: perk);
+  }
+}
+
+class PerkSlotViewState extends State<PerkSlotView> {
+  PerkSlotViewState({Key key, this.perk});
+  Perk perk;
+
+ _navigateAndDisplayPerkListView(BuildContext context) async {
+    var result = await Navigator.push(
+      context,
+      new MaterialPageRoute(
+          builder: (context) => new PerkListView()
+      ),
+    );
+    setState(() {
+      perk = result;
+    });
+ } 
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -263,41 +287,32 @@ class PerkSlotView extends StatelessWidget {
               });
         },
         child: Card(
-            // shape: const _DiamondBorder(),
-            color: Theme.of(context).cardColor,
-            elevation: 8.0,
-            child: new Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: new Stack(
-                children: [
-                new Column(
-                  children: <Widget>[
-                    new Expanded(
-                      child: new FadeInImage.memoryNetwork(
-                        image: perk.thumbnail,
-                        placeholder: kTransparentImage,
-                      ),
+          // shape: const _DiamondBorder(),
+          color: Theme.of(context).cardColor,
+          elevation: 8.0,
+          child: new Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: new Stack(children: [
+              new Column(
+                children: <Widget>[
+                  new Expanded(
+                    child: new FadeInImage.memoryNetwork(
+                      image: perk.thumbnail,
+                      placeholder: kTransparentImage,
                     ),
-                    new Text(
-                      perk.name.toUpperCase(),
-                      style: Theme.of(context).textTheme.caption,
-                    ),
-                  ],
-                ),
-                new Align(
+                  ),
+                  new Text(
+                    perk.name.toUpperCase(),
+                    style: Theme.of(context).textTheme.caption,
+                  ),
+                ],
+              ),
+              new Align(
                   alignment: Alignment.topRight,
                   child: new IconButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        new MaterialPageRoute(builder: (context) => new PerkListView()),
-                      );
-                    }, 
-                    icon: const Icon(Icons.list)
-                  )
-                ),
-              ]
-            ),
+                      onPressed: () => _navigateAndDisplayPerkListView(context),
+                      icon: const Icon(Icons.list))),
+            ]),
           ),
         ),
       ),
@@ -350,21 +365,57 @@ class PerkListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
-      appBar: new AppBar(leading: new BackButton(), centerTitle: true, title: const Text('Select Perk'),),
-      body: new StreamBuilder(
-        stream: Firestore.instance.collection('perks').snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return const Text('Loading...');
-          return new ListView.builder(
-              itemCount: snapshot.data.documents.length,
-              padding: const EdgeInsets.only(top: 10.0),
-              itemExtent: 55.0,
-              itemBuilder: (context, index) {
-                DocumentSnapshot ds = snapshot.data.documents[index];
-                Perk perk = Perk.fromDocument(ds);
-                return new Card(child: new Row(children: <Widget>[new Text(perk.name.toUpperCase())]));
-              });
-        })
+        appBar: new AppBar(
+          leading: new BackButton(),
+          centerTitle: true,
+          title: const Text('Select Perk'),
+        ),
+        body: new StreamBuilder(
+            stream: Firestore.instance.collection('perks').snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const Text('Loading...');
+              return new ListView.builder(
+                  itemCount: snapshot.data.documents.length,
+                  padding: const EdgeInsets.only(top: 10.0),
+                  itemExtent: 55.0,
+                  itemBuilder: (context, index) {
+                    DocumentSnapshot ds = snapshot.data.documents[index];
+                    Perk perk = Perk.fromDocument(ds);
+                    DBDRStorageManager.sharedInstance
+                        .getPerkImageURL(perk)
+                        .then((image) {
+                      perk.thumbnail = image;
+                    });
+                    return new PerkListViewCell(perk);
+                  });
+            }));
+  }
+}
+
+class PerkListViewCell extends StatelessWidget {
+  final Perk perk;
+
+  PerkListViewCell(this.perk);
+
+  @override
+  Widget build(BuildContext context) {
+    return new GestureDetector(
+      onTap: () {
+        Navigator.pop(context, perk);
+      },
+      child: new Card(
+        child: new Row(
+          children: <Widget>[
+            new FadeInImage.memoryNetwork(
+              image: perk.thumbnail,
+              placeholder: kTransparentImage,
+            ),
+            new Expanded( 
+              child: new Text(perk.name.toUpperCase()),
+            )
+          ]
+        )
+      ),
     );
   }
 }
