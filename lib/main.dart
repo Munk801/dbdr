@@ -59,11 +59,11 @@ class DBDRStorageManager {
             ? '1:612079491419:ios:472df683bdd23490'
             : '1:612079491419:android:472df683bdd23490',
         gcmSenderID: '612079491419',
-        apiKey: 'AIzaSyAf4e2fO674CDoZ66LQxjqi5wvV2yR_SlM',
+        apiKey: Platform.environment['FIREBASE_DBDR_APIKEY'],
         projectID: 'dbdr-6fbb1',
       ),
     )
-        .then((app) {
+      .then((app) {
       this.storage = new FirebaseStorage(
           app: app, storageBucket: 'gs://dbdr-6fbb1.appspot.com');
     });
@@ -289,7 +289,7 @@ class PerkSlotView extends StatelessWidget {
           color: Theme.of(context).cardColor,
           elevation: 8.0,
           child: new Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(5.0),
             child: new Stack(children: [
               new Column(
                 children: <Widget>[
