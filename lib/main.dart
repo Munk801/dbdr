@@ -88,6 +88,24 @@ class MyHomePageState extends State<MyHomePage> {
     if (result == null) {
       return;
     }
+    var newPerkBuild = <Perk>[
+      result['perk1'],
+      result['perk2'],
+      result['perk3'],
+      result['perk4']
+    ];
+    for (var perk in newPerkBuild) {
+      DBDRStorageManager.sharedInstance
+          .getPerkImageURL(perk)
+          .then((image) {
+        setState(() {
+          perk.thumbnail = image;
+        });
+      });
+    }
+    setState(() {
+      perkBuild = newPerkBuild;
+    });
   }
 
 
