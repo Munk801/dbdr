@@ -135,7 +135,8 @@ class MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    var perksRef = Firestore.instance.collection('perks').getDocuments().then(_getPerks);
+    var perksRef =
+        Firestore.instance.collection('perks').getDocuments().then(_getPerks);
     for (var i = 0; i < 4; i++) {
       perkBuild.add(new Perk.empty());
     }
@@ -182,9 +183,14 @@ class MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  Future<bool> _favoriteBuild() async {
-    if (currentUser == null) {return false;}
-
+  Future<Null> _favoriteBuild() async {
+    if (currentUser == null) {
+      return;
+    }
+    var name = buildTextEditingController.text;
+    var buildData = {"user": currentUser.uid, "name": name, "perk1": perkBuild[0].id, "perk2": perkBuild[1].id, "perk3": perkBuild[2].id, "perk4": perkBuild[3].id}; 
+    await Firestore.instance.collection("builds").add(buildData);
+    return;
   }
 
   @override
@@ -202,31 +208,30 @@ class MyHomePageState extends State<MyHomePage> {
         length: 2,
         child: new Scaffold(
             appBar: new AppBar(
-              bottom: new TabBar(
-                tabs: [
-                  new Tab(
-                    child: new Text("Survivor".toUpperCase()),
-                  ),
-                  new Tab(child: new Text("Killer".toUpperCase())),
-                ]
-              ),
+              bottom: new TabBar(tabs: [
+                new Tab(
+                  child: new Text("Survivor".toUpperCase()),
+                ),
+                new Tab(child: new Text("Killer".toUpperCase())),
+              ]),
               title: new Text(widget.title),
               actions: [
                 new IconButton(
                     onPressed: () {
-                    return showDialog(
-                          context: context,
-                          builder: (context) {
-                            return new AlertDialog(
-                              title: const Text("Name Your Build"),
-                              content: new Form(child: new TextFormField(controller: buildTextEditingController,)),
-                              actions: <Widget>[new FlatButton(onPressed: () {}, child: const Text("Cancel")), new FlatButton(onPressed: () {}, child: const Text("Done"),)],
-                            );
-                          },
-                        );
-                    }, 
-                    icon: const Icon(Icons.favorite)
-                ),
+                      return showDialog(
+                        context: context,
+                        builder: (context) {
+                          return new BuildNameAlertDialog(buildTextEditingController, (isSuccess) {
+                            if (isSuccess) {
+                              _favoriteBuild().then((_) {
+                                Navigator.of(context).pop();
+                              });
+                            }
+                          });
+                        },
+                      );
+                    },
+                    icon: const Icon(Icons.favorite)),
                 new IconButton(
                     onPressed: () {}, icon: const Icon(Icons.more_vert)),
               ],
@@ -250,6 +255,33 @@ class MyHomePageState extends State<MyHomePage> {
               icon: const Icon(Icons.swap_calls),
               label: new Text("Randomize".toUpperCase()),
             )));
+  }
+}
+
+class BuildNameAlertDialog extends StatelessWidget {
+  final TextEditingController buildTextEditingController;
+  final ValueChanged<bool> completion; 
+
+  BuildNameAlertDialog(this.buildTextEditingController, this.completion);
+
+  @override
+  Widget build(BuildContext context) {
+    return new AlertDialog(
+      title: const Text("Name Your Build"),
+      content: new Form(
+          child: new TextFormField(
+        controller: buildTextEditingController,
+      )),
+      actions: <Widget>[
+        new FlatButton(
+            onPressed: () {completion(false);},
+            child: const Text("Cancel")),
+        new FlatButton(
+          onPressed: () {completion(true);},
+          child: const Text("Done"),
+        )
+      ],
+    );
   }
 }
 
