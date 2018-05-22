@@ -144,6 +144,17 @@ class MyHomePageState extends State<MyHomePage> {
     super.initState();
   }
 
+  _navigateAndDisplayBuildListView(BuildContext context) async {
+    var result = await Navigator.push(
+      context,
+      new MaterialPageRoute(builder: (context) => new BuildListView(currentUser: currentUser)),
+    );
+    if (result == null) {
+      return;
+    }
+  }
+
+
   _navigateAndDisplayPerkListView(BuildContext context, int index) async {
     var result = await Navigator.push(
       context,
@@ -233,7 +244,11 @@ class MyHomePageState extends State<MyHomePage> {
                     },
                     icon: const Icon(Icons.favorite)),
                 new IconButton(
-                    onPressed: () {}, icon: const Icon(Icons.more_vert)),
+                    onPressed: () {
+                      _navigateAndDisplayBuildListView(context);
+                    }, 
+                    icon: const Icon(Icons.more_vert)
+                ),
               ],
             ),
             body: new TabBarView(children: [
@@ -420,6 +435,59 @@ class PerkDescriptionSheet extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class BuildListView extends StatelessWidget {
+
+  BuildListView({this.currentUser});
+  final FirebaseUser currentUser;
+
+  @override
+  Widget build(BuildContext context) {
+    return new Scaffold(
+        appBar: new AppBar(
+          leading: new BackButton(),
+          centerTitle: true,
+          title: const Text('Select a Build'),
+        ),
+        body: new StreamBuilder(
+            stream: Firestore.instance.collection('builds').where("user", isEqualTo: currentUser.uid).snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const Text('Loading...');
+              return new ListView.builder(
+                  itemCount: snapshot.data.documents.length,
+                  padding: const EdgeInsets.only(top: 10.0),
+                  itemExtent: 55.0,
+                  itemBuilder: (context, index) {
+                    DocumentSnapshot ds = snapshot.data.documents[index];
+                    return new BuildListViewCell(ds);
+                  });
+            }));
+  }
+}
+
+class BuildListViewCell extends StatelessWidget {
+  final DocumentSnapshot document;
+
+  BuildListViewCell(this.document);
+
+  @override
+  Widget build(BuildContext context) {
+    return new GestureDetector(
+      onTap: () {
+        Navigator.pop(context);
+      },
+      child: new Card(
+        child: new Row(
+          children: [
+            new Expanded(
+              child: new Text(document["name"]),
+            )
+          ]
+        )
       ),
     );
   }
