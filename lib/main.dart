@@ -6,79 +6,15 @@ import 'dart:io';
 // External Packages
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:transparent_image/transparent_image.dart';
 
 // Internal Packages
 import 'constants.dart';
 import 'perk.dart';
+import 'storage_manager.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
-
-class _DiamondBorder extends ShapeBorder {
-  const _DiamondBorder();
-
-  @override
-  EdgeInsetsGeometry get dimensions {
-    return const EdgeInsets.only();
-  }
-
-  @override
-  Path getInnerPath(Rect rect, {TextDirection textDirection}) {
-    return getOuterPath(rect, textDirection: textDirection);
-  }
-
-  @override
-  Path getOuterPath(Rect rect, {TextDirection textDirection}) {
-    return new Path()
-      ..moveTo(rect.left + rect.width / 2.0, rect.top)
-      ..lineTo(rect.right, rect.top + rect.height / 2.0)
-      ..lineTo(rect.left + rect.width / 2.0, rect.bottom)
-      ..lineTo(rect.left, rect.top + rect.height / 2.0)
-      ..close();
-  }
-
-  @override
-  void paint(Canvas canvas, Rect rect, {TextDirection textDirection}) {}
-
-  // This border doesn't support scaling.
-  @override
-  ShapeBorder scale(double t) {
-    return null;
-  }
-}
-
-class DBDRStorageManager {
-  static final sharedInstance = new DBDRStorageManager();
-  FirebaseStorage storage;
-
-  Future<Null> initialize() async {
-    await FirebaseApp
-        .configure(
-      name: 'DBDR',
-      options: new FirebaseOptions(
-        googleAppID: Platform.isIOS
-            ? '1:612079491419:ios:472df683bdd23490'
-            : '1:612079491419:android:472df683bdd23490',
-        gcmSenderID: '612079491419',
-        apiKey: Platform.environment['FIREBASE_DBDR_APIKEY'],
-        projectID: 'dbdr-6fbb1',
-      ),
-    )
-        .then((app) {
-      this.storage = new FirebaseStorage(
-          app: app, storageBucket: 'gs://dbdr-6fbb1.appspot.com');
-    });
-  }
-
-  Future<String> getPerkImageURL(Perk perk) async {
-    var assetUrl = '/images/perks/${perk.id}.png';
-    var url = await storage.ref().child(assetUrl).getDownloadURL();
-    return url;
-  }
-}
 
 void main() async {
   DBDRStorageManager.sharedInstance.initialize();
@@ -372,6 +308,7 @@ class PerkSlotView extends StatelessWidget {
         child: Card(
           // shape: const _DiamondBorder(),
           color: Theme.of(context).primaryColor,
+          // color: kDbdRed,
           elevation: 8.0,
           child: new Padding(
             padding: const EdgeInsets.all(5.0),
@@ -460,7 +397,7 @@ class BuildListView extends StatelessWidget {
               return new ListView.builder(
                   itemCount: snapshot.data.documents.length,
                   padding: const EdgeInsets.only(top: 10.0),
-                  itemExtent: 55.0,
+                  itemExtent: 80.0,
                   itemBuilder: (context, index) {
                     DocumentSnapshot ds = snapshot.data.documents[index];
                     return new BuildListViewCell(ds);
@@ -481,13 +418,19 @@ class BuildListViewCell extends StatelessWidget {
         Navigator.pop(context);
       },
       child: new Card(
-        child: new Row(
+        child: new Column(
           children: [
-            new Expanded(
-              child: new Text(document["name"]),
-            )
-          ]
-        )
+            new Row(
+              children: [
+                new Expanded(
+                  child: new Text(document["name"]),
+                )
+              ]
+            ),
+            new Row(children: [new Expanded(child: new Text(document["perk1"])), new Expanded(child: new Text(document["perk2"]))]),
+            new Row(children: [new Expanded(child: new Text(document["perk3"])), new Expanded(child: new Text(document["perk4"]))]),
+          ],
+      ),
       ),
     );
   }
