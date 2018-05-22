@@ -35,8 +35,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
-      title: 'DBDR',
-      home: MyHomePage(title: 'DBDR'),
+      title: 'DBD:R',
+      home: MyHomePage(title: 'DBD:R'),
       theme: _buildTheme(),
     );
   }
@@ -83,7 +83,7 @@ class MyHomePageState extends State<MyHomePage> {
   _navigateAndDisplayBuildListView(BuildContext context) async {
     var result = await Navigator.push(
       context,
-      new MaterialPageRoute(builder: (context) => new BuildListView(currentUser: currentUser)),
+      new MaterialPageRoute(builder: (context) => new BuildListView(currentUser: currentUser, perks: perks)),
     );
     if (result == null) {
       return;
@@ -170,10 +170,9 @@ class MyHomePageState extends State<MyHomePage> {
                         builder: (context) {
                           return new BuildNameAlertDialog(buildTextEditingController, (isSuccess) {
                             if (isSuccess) {
-                              _favoriteBuild().then((_) {
-                                Navigator.of(context).pop();
-                              });
+                              _favoriteBuild();
                             }
+                            Navigator.of(context).pop();
                           });
                         },
                       );
@@ -378,9 +377,15 @@ class PerkDescriptionSheet extends StatelessWidget {
 }
 
 class BuildListView extends StatelessWidget {
-
-  BuildListView({this.currentUser});
+  BuildListView({this.currentUser, this.perks});
   final FirebaseUser currentUser;
+  final List<Perk> perks;
+
+  Perk _getPerkFromID(String perkId) {
+    var perkIndex = perks.indexWhere((perk) => perk.id == perkId);
+    if (perkIndex == -1) { return null; }
+    return perks[perkIndex];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -400,22 +405,27 @@ class BuildListView extends StatelessWidget {
                   itemExtent: 80.0,
                   itemBuilder: (context, index) {
                     DocumentSnapshot ds = snapshot.data.documents[index];
-                    return new BuildListViewCell(ds);
+                    var perk1 = _getPerkFromID(ds['perk1']);
+                    var perk2 = _getPerkFromID(ds['perk2']);
+                    var perk3 = _getPerkFromID(ds['perk3']);
+                    var perk4 = _getPerkFromID(ds['perk4']);
+                    return new BuildListViewCell(buildName: ds['name'], perk1: perk1, perk2: perk2, perk3: perk3, perk4: perk4);
                   });
             }));
   }
 }
 
 class BuildListViewCell extends StatelessWidget {
-  final DocumentSnapshot document;
+  final String buildName;
+  final Perk perk1, perk2, perk3, perk4;
 
-  BuildListViewCell(this.document);
+  BuildListViewCell({this.buildName, this.perk1, this.perk2, this.perk3, this.perk4});
 
   @override
   Widget build(BuildContext context) {
     return new GestureDetector(
       onTap: () {
-        Navigator.pop(context);
+        Navigator.pop(context, {"perk1": perk1, "perk2": perk2, "perk3": perk3, "perk4": perk4});
       },
       child: new Card(
         child: new Column(
@@ -423,12 +433,12 @@ class BuildListViewCell extends StatelessWidget {
             new Row(
               children: [
                 new Expanded(
-                  child: new Text(document["name"]),
+                  child: new Text(buildName),
                 )
               ]
             ),
-            new Row(children: [new Expanded(child: new Text(document["perk1"])), new Expanded(child: new Text(document["perk2"]))]),
-            new Row(children: [new Expanded(child: new Text(document["perk3"])), new Expanded(child: new Text(document["perk4"]))]),
+            new Row(children: [new Expanded(child: new Text(perk1.name)), new Expanded(child: new Text(perk2.name))]),
+            new Row(children: [new Expanded(child: new Text(perk3.name)), new Expanded(child: new Text(perk4.name))]),
           ],
       ),
       ),
