@@ -67,7 +67,7 @@ class DBDRStorageManager {
         projectID: 'dbdr-6fbb1',
       ),
     )
-      .then((app) {
+        .then((app) {
       this.storage = new FirebaseStorage(
           app: app, storageBucket: 'gs://dbdr-6fbb1.appspot.com');
     });
@@ -89,7 +89,7 @@ ThemeData _buildTheme() {
   final ThemeData base = ThemeData.dark();
   return base.copyWith(
     accentColor: kDbdRed,
-      // cardColor: Colors.grey,
+    // cardColor: Colors.grey,
   );
 }
 
@@ -110,7 +110,6 @@ class MyHomePage extends StatefulWidget {
   const MyHomePage({Key key, this.title}) : super(key: key);
 
   final String title;
-  final FirebaseStorage storage;
 
   @override
   MyHomePageState createState() {
@@ -124,27 +123,23 @@ class MyHomePageState extends State<MyHomePage> {
   int numPerks = 4;
   FirebaseUser currentUser;
 
+  final buildTextEditingController = new TextEditingController();
+
   _getPerks(QuerySnapshot query) {
     for (var document in query.documents) {
       var perk = Perk.fromDocument(document);
-      setState(() => perks.add(perk)); 
+      setState(() => perks.add(perk));
     }
     _randomizePerks();
-
   }
 
   @override
   void initState() {
-    var perksRef = Firestore.instance
-        .collection('perks')
-        .getDocuments()
-        .then(_getPerks);
+    var perksRef = Firestore.instance.collection('perks').getDocuments().then(_getPerks);
     for (var i = 0; i < 4; i++) {
       perkBuild.add(new Perk.empty());
     }
-    _auth.signInAnonymously().then((user) {
-      currentUser = user;
-    });
+    _auth.signInAnonymously().then((user) => currentUser = user);
     super.initState();
   }
 
@@ -187,6 +182,11 @@ class MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  Future<bool> _favoriteBuild() async {
+    if (currentUser == null) {return false;}
+
+  }
+
   @override
   Widget build(BuildContext context) {
     var perkSlotViews = List<Widget>();
@@ -199,60 +199,57 @@ class MyHomePageState extends State<MyHomePage> {
       perkSlotViews.add(slotView);
     }
     return new DefaultTabController(
-      length: 2,
-      child: new Scaffold(
-      appBar: new AppBar(
-        bottom: new TabBar(
-          tabs: [
-            new Tab(child: new Text("Survivor".toUpperCase()),),
-            new Tab(child: new Text("Killer".toUpperCase())),
-          ]
-        ),
-        title: new Text(widget.title),
-        actions: [
-          new IconButton(
-            onPressed: () {
-            },
-            icon: const Icon(Icons.favorite)
-          ),
-          new IconButton(
-            onPressed: () {
-            },
-            icon: const Icon(Icons.more_vert)
-          ),
-
-        ],
-      ),
-      body: new TabBarView(
-        children: [
-            new Container(
-          color: Theme.of(context).backgroundColor,
-          child: new Stack(
-            children: [
-              new PerkBuildView(perkSlotViews),
-            ],
-          ),
-        ),
-                    new Container(
-          color: Theme.of(context).backgroundColor,
-          child: new Stack(
-            children: [
-              new PerkBuildView(perkSlotViews),
-            ],
-          ),
-        ),
-        ]
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: new FloatingActionButton.extended(
-        onPressed: _randomizePerks,
-        backgroundColor: Theme.of(context).accentColor,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.swap_calls),
-        label: new Text("Randomize".toUpperCase()),
-      )
-      )
-    );
+        length: 2,
+        child: new Scaffold(
+            appBar: new AppBar(
+              bottom: new TabBar(
+                tabs: [
+                  new Tab(
+                    child: new Text("Survivor".toUpperCase()),
+                  ),
+                  new Tab(child: new Text("Killer".toUpperCase())),
+                ]
+              ),
+              title: new Text(widget.title),
+              actions: [
+                new IconButton(
+                    onPressed: () {
+                    return showDialog(
+                          context: context,
+                          builder: (context) {
+                            return new AlertDialog(
+                              title: const Text("Name Your Build"),
+                              content: new Form(child: new TextFormField(controller: buildTextEditingController,)),
+                              actions: <Widget>[new FlatButton(onPressed: () {}, child: const Text("Cancel")), new FlatButton(onPressed: () {}, child: const Text("Done"),)],
+                            );
+                          },
+                        );
+                    }, 
+                    icon: const Icon(Icons.favorite)
+                ),
+                new IconButton(
+                    onPressed: () {}, icon: const Icon(Icons.more_vert)),
+              ],
+            ),
+            body: new TabBarView(children: [
+              new Container(
+                color: Theme.of(context).backgroundColor,
+                child: new PerkBuildView(perkSlotViews),
+              ),
+              new Container(
+                color: Theme.of(context).backgroundColor,
+                child: new PerkBuildView(perkSlotViews),
+              ),
+            ]),
+            floatingActionButtonLocation:
+                FloatingActionButtonLocation.centerFloat,
+            floatingActionButton: new FloatingActionButton.extended(
+              onPressed: _randomizePerks,
+              backgroundColor: Theme.of(context).accentColor,
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.swap_calls),
+              label: new Text("Randomize".toUpperCase()),
+            )));
   }
 }
 
