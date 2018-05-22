@@ -5,6 +5,7 @@ import 'dart:io';
 
 // External Packages
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +14,8 @@ import 'package:transparent_image/transparent_image.dart';
 // Internal Packages
 import 'constants.dart';
 import 'perk.dart';
+
+final FirebaseAuth _auth = FirebaseAuth.instance;
 
 class _DiamondBorder extends ShapeBorder {
   const _DiamondBorder();
@@ -119,24 +122,29 @@ class MyHomePageState extends State<MyHomePage> {
   List<Perk> perks = [];
   List<Perk> perkBuild = [];
   int numPerks = 4;
-  List<String> perkImageUrls = [];
+  FirebaseUser currentUser;
+
+  _getPerks(QuerySnapshot query) {
+    for (var document in query.documents) {
+      var perk = Perk.fromDocument(document);
+      setState(() => perks.add(perk)); 
+    }
+    _randomizePerks();
+
+  }
 
   @override
   void initState() {
     var perksRef = Firestore.instance
         .collection('perks')
         .getDocuments()
-        .then((querySnapshot) {
-      for (var document in querySnapshot.documents) {
-        var perk = Perk.fromDocument(document);
-        setState(() {
-          perks.add(perk);
-        });
-      }
-    });
+        .then(_getPerks);
     for (var i = 0; i < 4; i++) {
       perkBuild.add(new Perk.empty());
     }
+    _auth.signInAnonymously().then((user) {
+      currentUser = user;
+    });
     super.initState();
   }
 
@@ -190,15 +198,50 @@ class MyHomePageState extends State<MyHomePage> {
               _navigateAndDisplayPerkListView(context, index));
       perkSlotViews.add(slotView);
     }
-    return new Scaffold(
-      appBar: new AppBar(title: new Text(widget.title)),
-      body: new Container(
-        color: Theme.of(context).backgroundColor,
-        child: new Stack(
-          children: [
-            new PerkBuildView(perkSlotViews),
-          ],
+    return new DefaultTabController(
+      length: 2,
+      child: new Scaffold(
+      appBar: new AppBar(
+        bottom: new TabBar(
+          tabs: [
+            new Tab(child: new Text("Survivor".toUpperCase()),),
+            new Tab(child: new Text("Killer".toUpperCase())),
+          ]
         ),
+        title: new Text(widget.title),
+        actions: [
+          new IconButton(
+            onPressed: () {
+            },
+            icon: const Icon(Icons.favorite)
+          ),
+          new IconButton(
+            onPressed: () {
+            },
+            icon: const Icon(Icons.more_vert)
+          ),
+
+        ],
+      ),
+      body: new TabBarView(
+        children: [
+            new Container(
+          color: Theme.of(context).backgroundColor,
+          child: new Stack(
+            children: [
+              new PerkBuildView(perkSlotViews),
+            ],
+          ),
+        ),
+                    new Container(
+          color: Theme.of(context).backgroundColor,
+          child: new Stack(
+            children: [
+              new PerkBuildView(perkSlotViews),
+            ],
+          ),
+        ),
+        ]
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: new FloatingActionButton.extended(
@@ -207,6 +250,7 @@ class MyHomePageState extends State<MyHomePage> {
         foregroundColor: Colors.white,
         icon: const Icon(Icons.swap_calls),
         label: new Text("Randomize".toUpperCase()),
+      )
       )
     );
   }
