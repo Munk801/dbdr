@@ -425,6 +425,13 @@ class PerkSlotView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Widget thumbnail = Container();
+    if (perk.thumbnail != "") {
+      thumbnail = new FadeInImage.memoryNetwork(
+        image: perk.thumbnail,
+        placeholder: kTransparentImage,
+      );
+    }
     return new Padding(
       padding: const EdgeInsets.all(5.0),
       child: new GestureDetector(
@@ -448,10 +455,7 @@ class PerkSlotView extends StatelessWidget {
                 new Column(
                   children: <Widget>[
                     new Expanded(
-                      child: new FadeInImage.memoryNetwork(
-                        image: perk.thumbnail,
-                        placeholder: kTransparentImage,
-                      ),
+                      child: thumbnail,
                     ),
                     new Text(
                       perk.name.toUpperCase(),
@@ -483,6 +487,14 @@ class PerkDescriptionSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Widget thumbnail = Container();
+    if (perk.thumbnail != "") {
+      thumbnail = new FadeInImage.memoryNetwork(
+        image: perk.thumbnail,
+        placeholder: kTransparentImage,
+      );
+    }
+
     return new Padding(
       padding: const EdgeInsets.all(20.0),
       child: new Container(
@@ -490,10 +502,7 @@ class PerkDescriptionSheet extends StatelessWidget {
         child: new Column(
           children: <Widget>[
             new Expanded(
-              child: new FadeInImage.memoryNetwork(
-                image: perk.thumbnail,
-                placeholder: kTransparentImage,
-              ),
+              child: thumbnail,
             ),
             new Text(
               perk.name.toUpperCase(),
@@ -652,6 +661,13 @@ class PerkListViewCellState extends State<PerkListViewCell> {
 
   @override
   Widget build(BuildContext context) {
+    Widget thumbnail = Container();
+    if (widget.perk.thumbnail != "") {
+      thumbnail = new FadeInImage.memoryNetwork(
+        image: widget.perk.thumbnail,
+        placeholder: kTransparentImage,
+      );
+    }
     return new GestureDetector(
       onTap: () {
         Navigator.pop(context, widget.perk);
@@ -659,10 +675,7 @@ class PerkListViewCellState extends State<PerkListViewCell> {
       child: new Card(
         child: new Row(
           children: <Widget>[
-            new FadeInImage.memoryNetwork(
-              image: widget.perk.thumbnail,
-              placeholder: kTransparentImage,
-            ),
+            thumbnail,
             new Expanded(
               child: new Text(widget.perk.name.toUpperCase()),
             )
