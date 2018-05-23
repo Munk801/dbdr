@@ -103,10 +103,17 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
     super.dispose();
   }
 
+  PlayerRole _getRoleFromTabIndex() {
+    var role = _tabController.index == 0 ? PlayerRole.survivor : PlayerRole.killer;
+    return role;
+  }
+
   _navigateAndDisplayBuildListView(BuildContext context) async {
+    var role = _getRoleFromTabIndex();
+    var perkList = role == PlayerRole.survivor ? perks : killerPerks;
     var result = await Navigator.push(
       context,
-      new MaterialPageRoute(builder: (context) => new BuildListView(currentUser: currentUser, perks: perks)),
+      new MaterialPageRoute(builder: (context) => new BuildListView(currentUser: currentUser, perks: perkList, role: role)),
     );
     if (result == null) {
       return;
@@ -133,11 +140,13 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
 
 
   _navigateAndDisplayPerkListView(BuildContext context, int index) async {
+    var role = _getRoleFromTabIndex();
+    var perkList = role == PlayerRole.survivor ? perks : killerPerks;
     var result = await Navigator.push(
       context,
-      new MaterialPageRoute(builder: (context) => new PerkListView()),
-    );
-    if (result == null) {
+      new MaterialPageRoute(builder: (context) => new PerkListView(perks: perkList, role: role)),
+    );{
+    if (result == null) 
       return;
     }
     setState(() {
@@ -194,18 +203,21 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
     }
   }
 
-  Future<Null> _favoriteBuild() async {
+  Future<Null> _favoriteBuild(PlayerRole role) async {
     if (currentUser == null) {
       return;
     }
+    var perkList = role == PlayerRole.survivor ? perkBuild : killerPerkBuild;
+    var roleString = role == PlayerRole.survivor ? 'survivor' : 'killer';
     var name = buildTextEditingController.text;
     var buildData = {
       "user": currentUser.uid, 
       "name": name, 
-      "perk1": perkBuild[0].id, 
-      "perk2": perkBuild[1].id, 
-      "perk3": perkBuild[2].id, 
-      "perk4": perkBuild[3].id
+      "perk1": perkList[0].id, 
+      "perk2": perkList[1].id,
+      "perk3": perkList[2].id, 
+      "perk4": perkList[3].id,
+      "role": roleString,
     }; 
     await Firestore.instance.collection("builds").add(buildData);
     return;
@@ -215,9 +227,10 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
    return showDialog(
     context: context,
     builder: (dialogContext) {
+      var role = _getRoleFromTabIndex();
       return new BuildNameAlertDialog(buildTextEditingController, (isSuccess) {
         if (isSuccess) {
-          _favoriteBuild();
+          _favoriteBuild(role);
         }
         Navigator.of(dialogContext).pop();
       });
@@ -287,7 +300,7 @@ List<Widget> _createPerkSlotFromBuild(List<Perk> perkBuild) {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: new FloatingActionButton.extended(
         onPressed: () {
-          var role = _tabController.index == 0 ? PlayerRole.survivor : PlayerRole.killer;
+          var role = _getRoleFromTabIndex();
           _randomizePerks(role);
         },
         backgroundColor: Theme.of(context).accentColor,
@@ -451,7 +464,7 @@ class PerkDescriptionSheet extends StatelessWidget {
             ),
             new Text(
               perk.name.toUpperCase(),
-              style: Theme.of(context).textTheme.headline,
+              style: Theme.of(context).accentTextTheme.headline,
             ),
             new Padding(
               padding: const EdgeInsets.all(8.0),
@@ -468,9 +481,10 @@ class PerkDescriptionSheet extends StatelessWidget {
 }
 
 class BuildListView extends StatelessWidget {
-  BuildListView({this.currentUser, this.perks});
+  BuildListView({this.currentUser, this.perks, this.role});
   final FirebaseUser currentUser;
   final List<Perk> perks;
+  final PlayerRole role;
 
   Perk _getPerkFromID(String perkId) {
     var perkIndex = perks.indexWhere((perk) => perk.id == perkId);
@@ -480,6 +494,7 @@ class BuildListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var roleString = role == PlayerRole.survivor ? 'survivor' : 'killer';
     return new Scaffold(
       appBar: new AppBar(
         leading: new BackButton(),
@@ -487,7 +502,7 @@ class BuildListView extends StatelessWidget {
         title: const Text('Select a Build'),
       ),
       body: new StreamBuilder(
-        stream: Firestore.instance.collection('builds').where("user", isEqualTo: currentUser.uid).snapshots(),
+        stream: Firestore.instance.collection('builds').where("user", isEqualTo: currentUser.uid).where('role', isEqualTo: roleString).snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const Text('Loading...');
           return new ListView.builder(
@@ -542,11 +557,13 @@ class BuildListViewCell extends StatelessWidget {
 
 class PerkListView extends StatelessWidget {
   final List<Perk> perks;
+  final PlayerRole role;
 
-  PerkListView({this.perks});
+  PerkListView({this.perks, this.role});
 
   @override
   Widget build(BuildContext context) {
+    var roleString = role == PlayerRole.survivor ? "survivor" : "killer";
     return new Scaffold(
       appBar: new AppBar(
         leading: new BackButton(),
@@ -554,7 +571,7 @@ class PerkListView extends StatelessWidget {
         title: const Text('Select Perk'),
       ),
       body: new StreamBuilder(
-        stream: Firestore.instance.collection('perks').snapshots(),
+        stream: Firestore.instance.collection('perks').where('role', isEqualTo: roleString).snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const Text('Loading...');
           return new ListView.builder(
