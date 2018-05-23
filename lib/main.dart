@@ -250,12 +250,14 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
       return new BuildNameAlertDialog(buildTextEditingController, (isSuccess) {
         if (isSuccess) {
           _favoriteBuild(role);
+          Scaffold.of(context).showSnackBar(
+            new SnackBar(content: new Text("Build has been saved.", textAlign: TextAlign.center, style: Theme.of(context).primaryTextTheme.subhead,))
+          );
         }
         Navigator.of(dialogContext).pop();
       });
     },
   ).then((value) {
-    Scaffold.of(context).showSnackBar(new SnackBar(content: new Text("Build has been saved")));
   }); 
 }
 
@@ -279,6 +281,7 @@ List<Widget> _createPerkSlotFromBuild(List<Perk> perkBuild) {
     return new Scaffold(
       appBar: new AppBar(
         bottom: new TabBar(
+          indicatorColor: Theme.of(context).accentColor,
           controller: _tabController,
           tabs: [
             new Tab(child: new Text("Survivor".toUpperCase())),
@@ -340,18 +343,23 @@ class BuildNameAlertDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new AlertDialog(
-      title: const Text("Name Your Build"),
+      title: new Text("Name Your Build".toUpperCase(), style: Theme.of(context).primaryTextTheme.subhead),
       content: new Form(
-          child: new TextFormField(
+        child: new TextFormField(
         controller: buildTextEditingController,
       )),
       actions: <Widget>[
         new FlatButton(
-            onPressed: () {completion(false);},
-            child: const Text("Cancel")),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(const Radius.circular(8.0))),
+          color: Theme.of(context).primaryColor,
+          onPressed: () {completion(false);},
+          child: new Text("Cancel".toUpperCase(), style: Theme.of(context).primaryTextTheme.button),
+        ),
         new FlatButton(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(const Radius.circular(8.0))),
+          color: Theme.of(context).accentColor,
           onPressed: () {completion(true);},
-          child: const Text("Done"),
+          child: new Text("Done".toUpperCase(), style: Theme.of(context).primaryTextTheme.button),
         )
       ],
     );
