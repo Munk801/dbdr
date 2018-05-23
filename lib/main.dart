@@ -60,6 +60,7 @@ class MyHomePageState extends State<MyHomePage> {
   FirebaseUser currentUser;
 
   final buildTextEditingController = new TextEditingController();
+  final _tabController = new TabController(length: 2);
 
   _getPerks(QuerySnapshot query) {
     for (var document in query.documents) {
@@ -153,10 +154,33 @@ class MyHomePageState extends State<MyHomePage> {
       return;
     }
     var name = buildTextEditingController.text;
-    var buildData = {"user": currentUser.uid, "name": name, "perk1": perkBuild[0].id, "perk2": perkBuild[1].id, "perk3": perkBuild[2].id, "perk4": perkBuild[3].id}; 
+    var buildData = {
+      "user": currentUser.uid, 
+      "name": name, 
+      "perk1": perkBuild[0].id, 
+      "perk2": perkBuild[1].id, 
+      "perk3": perkBuild[2].id, 
+      "perk4": perkBuild[3].id
+    }; 
     await Firestore.instance.collection("builds").add(buildData);
     return;
   }
+
+  _showFavoriteBuildDialog(BuildContext context) {
+   return showDialog(
+    context: context,
+    builder: (dialogContext) {
+      return new BuildNameAlertDialog(buildTextEditingController, (isSuccess) {
+        if (isSuccess) {
+          _favoriteBuild();
+        }
+        Navigator.of(dialogContext).pop();
+      });
+    },
+  ).then((value) {
+    Scaffold.of(context).showSnackBar(new SnackBar(content: new Text("Build has been saved")));
+  }); 
+}
 
   @override
   Widget build(BuildContext context) {
@@ -169,33 +193,24 @@ class MyHomePageState extends State<MyHomePage> {
               _navigateAndDisplayPerkListView(context, index));
       perkSlotViews.add(slotView);
     }
-    return new DefaultTabController(
-        length: 2,
-        child: new Scaffold(
+    return new Scaffold(
             appBar: new AppBar(
-              bottom: new TabBar(tabs: [
-                new Tab(
-                  child: new Text("Survivor".toUpperCase()),
-                ),
-                new Tab(child: new Text("Killer".toUpperCase())),
+              bottom: new TabBar(
+                controller: _tabController,
+                tabs: [
+                  new Tab(child: new Text("Survivor".toUpperCase())),
+                  new Tab(child: new Text("Killer".toUpperCase())),
               ]),
               title: new Text(widget.title),
               actions: [
-                new IconButton(
-                    onPressed: () {
-                      return showDialog(
-                        context: context,
-                        builder: (context) {
-                          return new BuildNameAlertDialog(buildTextEditingController, (isSuccess) {
-                            if (isSuccess) {
-                              _favoriteBuild();
-                            }
-                            Navigator.of(context).pop();
-                          });
-                        },
-                      );
-                    },
-                    icon: const Icon(Icons.favorite)),
+                new Builder(
+                  builder: (context) {
+                    return new IconButton(
+                      onPressed: () => _showFavoriteBuildDialog(context),
+                      icon: const Icon(Icons.favorite),
+                    );
+                  }
+                ),
                 new IconButton(
                     onPressed: () {
                       _navigateAndDisplayBuildListView(context);
@@ -204,7 +219,9 @@ class MyHomePageState extends State<MyHomePage> {
                 ),
               ],
             ),
-            body: new TabBarView(children: [
+            body: new TabBarView(
+              controller: _tabController,
+              children: [
               new Container(
                 color: Theme.of(context).backgroundColor,
                 child: new PerkBuildView(perkSlotViews),
@@ -222,7 +239,7 @@ class MyHomePageState extends State<MyHomePage> {
               foregroundColor: Colors.white,
               icon: const Icon(Icons.swap_calls),
               label: new Text("Randomize".toUpperCase()),
-            )));
+            ));
   }
 }
 
