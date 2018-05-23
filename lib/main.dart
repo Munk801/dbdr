@@ -15,6 +15,8 @@ import 'storage_manager.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
 
+enum PlayerRole {survivor, killer}
+
 void main() async {
   DBDRStorageManager.sharedInstance.initialize();
   runApp(new MyApp());
@@ -54,7 +56,9 @@ class MyHomePage extends StatefulWidget {
 
 class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
   List<Perk> perks = [];
+  List<Perk> killerPerks = [];
   List<Perk> perkBuild = [];
+  List<Perk> killerPerkBuild = [];
   int numPerks = 4;
   FirebaseUser currentUser;
   TabController _tabController;
@@ -66,16 +70,27 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
       var perk = Perk.fromDocument(document);
       setState(() => perks.add(perk));
     }
-    _randomizePerks();
+    _randomizePerks(PlayerRole.survivor);
   }
+
+  _getKillerPerks(QuerySnapshot query) {
+    for (var document in query.documents) {
+      var perk = Perk.fromDocument(document);
+      setState(() => killerPerks.add(perk));
+    }
+    _randomizePerks(PlayerRole.killer);
+  }
+
 
   @override
   void initState() {
     _tabController = TabController(vsync: this, length: 2);
     // Retrieve all the perks
-    Firestore.instance.collection('perks').getDocuments().then(_getPerks);
+    Firestore.instance.collection('perks').where('role', isEqualTo: 'survivor').getDocuments().then(_getPerks);
+    Firestore.instance.collection('perks').where('role', isEqualTo: 'killer').getDocuments().then(_getKillerPerks);
     for (var i = 0; i < 4; i++) {
       perkBuild.add(new Perk.empty());
+      killerPerkBuild.add(new Perk.empty());
     }
     _auth.signInAnonymously().then((user) => currentUser = user);
     super.initState();
@@ -130,16 +145,28 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
     });
   }
 
-  _randomizePerks() {
+  _randomizePerks(PlayerRole role) {
+    var perkList = List<Perk>();
+    switch (role) {
+      case PlayerRole.survivor:
+        perkList = perks;
+        break;
+      case PlayerRole.killer:
+        perkList = killerPerks;
+        break;
+      default:
+        print("Unable to find role");
+        break;
+    }
     List<Perk> newPerkBuild = [];
     List<int> selected = [];
     for (var i = 0; i < 4; i++) {
-      var randomIndex = Random().nextInt(perks.length);
+      var randomIndex = Random().nextInt(perkList.length);
       // Ensure that we never get the same perk in the same slot
       while (selected.contains(randomIndex)) {
-        randomIndex = Random().nextInt(perks.length);
+        randomIndex = Random().nextInt(perkList.length);
       }
-      var perkToAdd = perks[randomIndex];
+      var perkToAdd = perkList [randomIndex];
       // Retrieve the perk image and add it to the perk
       DBDRStorageManager.sharedInstance
           .getPerkImageURL(perkToAdd)
@@ -151,9 +178,20 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
       newPerkBuild.add(perkToAdd);
       selected.add(randomIndex);
     }
-    setState(() {
-      perkBuild = newPerkBuild;
-    });
+    switch (role) {
+      case PlayerRole.survivor:
+        setState(() {
+          perkBuild = newPerkBuild;
+        });
+        break;
+      case PlayerRole.killer:
+        setState(() {
+          killerPerkBuild = newPerkBuild;
+        });
+        break;
+      default:
+        break;
+    }
   }
 
   Future<Null> _favoriteBuild() async {
@@ -189,17 +227,23 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
   }); 
 }
 
+List<Widget> _createPerkSlotFromBuild(List<Perk> perkBuild) {
+  var perkSlotViews = List<Widget>();
+  for (var i = 0; i < 4; i++) {
+    var slotView = new PerkSlotView(
+        perk: perkBuild[i],
+        index: i,
+        onListPressed: (index) =>
+            _navigateAndDisplayPerkListView(context, index));
+    perkSlotViews.add(slotView);
+  }
+  return perkSlotViews;
+}
+
   @override
   Widget build(BuildContext context) {
-    var perkSlotViews = List<Widget>();
-    for (var i = 0; i < 4; i++) {
-      var slotView = new PerkSlotView(
-          perk: perkBuild[i],
-          index: i,
-          onListPressed: (index) =>
-              _navigateAndDisplayPerkListView(context, index));
-      perkSlotViews.add(slotView);
-    }
+    var survivorPerkSlotViews = _createPerkSlotFromBuild(perkBuild);
+    var killerPerkSlotViews = _createPerkSlotFromBuild(killerPerkBuild);
     return new Scaffold(
       appBar: new AppBar(
         bottom: new TabBar(
@@ -232,17 +276,20 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
         children: [
           new Container(
             color: Theme.of(context).backgroundColor,
-            child: new PerkBuildView(perkSlotViews),
+            child: new PerkBuildView(survivorPerkSlotViews),
           ),
           new Container(
             color: Theme.of(context).backgroundColor,
-            child: new PerkBuildView(perkSlotViews),
+            child: new PerkBuildView(killerPerkSlotViews),
           ),
         ]
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: new FloatingActionButton.extended(
-        onPressed: _randomizePerks,
+        onPressed: () {
+          var role = _tabController.index == 0 ? PlayerRole.survivor : PlayerRole.killer;
+          _randomizePerks(role);
+        },
         backgroundColor: Theme.of(context).accentColor,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.swap_calls),
