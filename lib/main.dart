@@ -434,27 +434,33 @@ class PerkSlotView extends StatelessWidget {
           elevation: 8.0,
           child: new Padding(
             padding: const EdgeInsets.all(5.0),
-            child: new Stack(children: [
-              new Column(
-                children: <Widget>[
-                  new Expanded(
-                    child: new FadeInImage.memoryNetwork(
-                      image: perk.thumbnail,
-                      placeholder: kTransparentImage,
+            child: new Stack(
+              alignment: Alignment.topCenter,
+              children: [
+                new Column(
+                  children: <Widget>[
+                    new Expanded(
+                      child: new FadeInImage.memoryNetwork(
+                        image: perk.thumbnail,
+                        placeholder: kTransparentImage,
+                      ),
                     ),
-                  ),
-                  new Text(
-                    perk.name.toUpperCase(),
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.caption,
-                  ),
-                ],
-              ),
-              new Align(
+                    new Text(
+                      perk.name.toUpperCase(),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.caption,
+                    ),
+                  ],
+                ),
+                new Align(
                   alignment: Alignment.topRight,
                   child: new IconButton(
-                      onPressed: _handleTap, icon: const Icon(Icons.list))),
-            ]),
+                    onPressed: _handleTap, 
+                    icon: const Icon(Icons.list)
+                  )
+                ),
+              ]
+            ),
           ),
         ),
       ),
