@@ -1,7 +1,6 @@
 // Dart
 import 'dart:async';
 import 'dart:math';
-import 'dart:io';
 
 // External Packages
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -53,14 +52,14 @@ class MyHomePage extends StatefulWidget {
   }
 }
 
-class MyHomePageState extends State<MyHomePage> {
+class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
   List<Perk> perks = [];
   List<Perk> perkBuild = [];
   int numPerks = 4;
   FirebaseUser currentUser;
+  TabController _tabController;
 
   final buildTextEditingController = new TextEditingController();
-  final _tabController = new TabController(length: 2);
 
   _getPerks(QuerySnapshot query) {
     for (var document in query.documents) {
@@ -72,13 +71,21 @@ class MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    var perksRef =
-        Firestore.instance.collection('perks').getDocuments().then(_getPerks);
+    _tabController = TabController(vsync: this, length: 2);
+    // Retrieve all the perks
+    Firestore.instance.collection('perks').getDocuments().then(_getPerks);
     for (var i = 0; i < 4; i++) {
       perkBuild.add(new Perk.empty());
     }
     _auth.signInAnonymously().then((user) => currentUser = user);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    buildTextEditingController.dispose();
+    super.dispose();
   }
 
   _navigateAndDisplayBuildListView(BuildContext context) async {
@@ -194,52 +201,54 @@ class MyHomePageState extends State<MyHomePage> {
       perkSlotViews.add(slotView);
     }
     return new Scaffold(
-            appBar: new AppBar(
-              bottom: new TabBar(
-                controller: _tabController,
-                tabs: [
-                  new Tab(child: new Text("Survivor".toUpperCase())),
-                  new Tab(child: new Text("Killer".toUpperCase())),
-              ]),
-              title: new Text(widget.title),
-              actions: [
-                new Builder(
-                  builder: (context) {
-                    return new IconButton(
-                      onPressed: () => _showFavoriteBuildDialog(context),
-                      icon: const Icon(Icons.favorite),
-                    );
-                  }
-                ),
-                new IconButton(
-                    onPressed: () {
-                      _navigateAndDisplayBuildListView(context);
-                    }, 
-                    icon: const Icon(Icons.more_vert)
-                ),
-              ],
-            ),
-            body: new TabBarView(
-              controller: _tabController,
-              children: [
-              new Container(
-                color: Theme.of(context).backgroundColor,
-                child: new PerkBuildView(perkSlotViews),
-              ),
-              new Container(
-                color: Theme.of(context).backgroundColor,
-                child: new PerkBuildView(perkSlotViews),
-              ),
-            ]),
-            floatingActionButtonLocation:
-                FloatingActionButtonLocation.centerFloat,
-            floatingActionButton: new FloatingActionButton.extended(
-              onPressed: _randomizePerks,
-              backgroundColor: Theme.of(context).accentColor,
-              foregroundColor: Colors.white,
-              icon: const Icon(Icons.swap_calls),
-              label: new Text("Randomize".toUpperCase()),
-            ));
+      appBar: new AppBar(
+        bottom: new TabBar(
+          controller: _tabController,
+          tabs: [
+            new Tab(child: new Text("Survivor".toUpperCase())),
+            new Tab(child: new Text("Killer".toUpperCase())),
+          ]
+        ),
+        title: new Text(widget.title),
+        actions: [
+          new Builder(
+            builder: (context) {
+              return new IconButton(
+                onPressed: () => _showFavoriteBuildDialog(context),
+                icon: const Icon(Icons.favorite),
+              );
+            }
+          ),
+          new IconButton(
+            onPressed: () {
+                _navigateAndDisplayBuildListView(context);
+            }, 
+            icon: const Icon(Icons.more_vert)
+          ),
+        ],
+      ),
+      body: new TabBarView(
+        controller: _tabController,
+        children: [
+          new Container(
+            color: Theme.of(context).backgroundColor,
+            child: new PerkBuildView(perkSlotViews),
+          ),
+          new Container(
+            color: Theme.of(context).backgroundColor,
+            child: new PerkBuildView(perkSlotViews),
+          ),
+        ]
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: new FloatingActionButton.extended(
+        onPressed: _randomizePerks,
+        backgroundColor: Theme.of(context).accentColor,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.swap_calls),
+        label: new Text("Randomize".toUpperCase()),
+      )
+    );
   }
 }
 
@@ -425,28 +434,31 @@ class BuildListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
-        appBar: new AppBar(
-          leading: new BackButton(),
-          centerTitle: true,
-          title: const Text('Select a Build'),
-        ),
-        body: new StreamBuilder(
-            stream: Firestore.instance.collection('builds').where("user", isEqualTo: currentUser.uid).snapshots(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return const Text('Loading...');
-              return new ListView.builder(
-                  itemCount: snapshot.data.documents.length,
-                  padding: const EdgeInsets.only(top: 10.0),
-                  itemExtent: 80.0,
-                  itemBuilder: (context, index) {
-                    DocumentSnapshot ds = snapshot.data.documents[index];
-                    var perk1 = _getPerkFromID(ds['perk1']);
-                    var perk2 = _getPerkFromID(ds['perk2']);
-                    var perk3 = _getPerkFromID(ds['perk3']);
-                    var perk4 = _getPerkFromID(ds['perk4']);
-                    return new BuildListViewCell(buildName: ds['name'], perk1: perk1, perk2: perk2, perk3: perk3, perk4: perk4);
-                  });
-            }));
+      appBar: new AppBar(
+        leading: new BackButton(),
+        centerTitle: true,
+        title: const Text('Select a Build'),
+      ),
+      body: new StreamBuilder(
+        stream: Firestore.instance.collection('builds').where("user", isEqualTo: currentUser.uid).snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return const Text('Loading...');
+          return new ListView.builder(
+            itemCount: snapshot.data.documents.length,
+            padding: const EdgeInsets.only(top: 10.0),
+            itemExtent: 80.0,
+            itemBuilder: (context, index) {
+              DocumentSnapshot ds = snapshot.data.documents[index];
+              var perk1 = _getPerkFromID(ds['perk1']);
+              var perk2 = _getPerkFromID(ds['perk2']);
+              var perk3 = _getPerkFromID(ds['perk3']);
+              var perk4 = _getPerkFromID(ds['perk4']);
+              return new BuildListViewCell(buildName: ds['name'], perk1: perk1, perk2: perk2, perk3: perk3, perk4: perk4);
+            }
+          );
+        }
+      )
+    );
   }
 }
 
@@ -489,25 +501,28 @@ class PerkListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
-        appBar: new AppBar(
-          leading: new BackButton(),
-          centerTitle: true,
-          title: const Text('Select Perk'),
-        ),
-        body: new StreamBuilder(
-            stream: Firestore.instance.collection('perks').snapshots(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return const Text('Loading...');
-              return new ListView.builder(
-                  itemCount: snapshot.data.documents.length,
-                  padding: const EdgeInsets.only(top: 10.0),
-                  itemExtent: 55.0,
-                  itemBuilder: (context, index) {
-                    DocumentSnapshot ds = snapshot.data.documents[index];
-                    Perk perk = Perk.fromDocument(ds);
-                    return new PerkListViewCell(perk);
-                  });
-            }));
+      appBar: new AppBar(
+        leading: new BackButton(),
+        centerTitle: true,
+        title: const Text('Select Perk'),
+      ),
+      body: new StreamBuilder(
+        stream: Firestore.instance.collection('perks').snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return const Text('Loading...');
+          return new ListView.builder(
+            itemCount: snapshot.data.documents.length,
+            padding: const EdgeInsets.only(top: 10.0),
+            itemExtent: 55.0,
+            itemBuilder: (context, index) {
+              DocumentSnapshot ds = snapshot.data.documents[index];
+              Perk perk = Perk.fromDocument(ds);
+              return new PerkListViewCell(perk);
+            }
+          );
+        }
+      )
+    );
   }
 }
 
