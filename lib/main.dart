@@ -22,11 +22,26 @@ void main() async {
   runApp(new MyApp());
 }
 
+TextTheme _buildDBDTextTheme(TextTheme base) {
+  return base
+      .copyWith(
+        title: base.title.copyWith(fontWeight: FontWeight.w300, fontSize: 20.0),
+        headline: base.headline.copyWith(fontWeight: FontWeight.w300),
+        caption: base.caption.copyWith(fontWeight: FontWeight.w200, fontSize: 14.0),
+        body1: base.body1.copyWith(fontWeight: FontWeight.w300, fontSize: 16.0)
+      )
+      .apply(
+        fontFamily: "Open Sans",
+      );
+}
+
 ThemeData _buildTheme() {
   final ThemeData base = ThemeData.dark();
   return base.copyWith(
     accentColor: kDbdRed,
-    // cardColor: Colors.grey,
+    textTheme: _buildDBDTextTheme(base.textTheme),
+    primaryTextTheme: _buildDBDTextTheme(base.primaryTextTheme),
+    accentTextTheme: _buildDBDTextTheme(base.accentTextTheme)
   );
 }
 
