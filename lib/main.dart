@@ -149,7 +149,11 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
       });
     }
     setState(() {
-      perkBuild = newPerkBuild;
+      if (role == PlayerRole.survivor) {
+        perkBuild = newPerkBuild;
+      } else {
+        killerPerkBuild = newPerkBuild;
+      }
     });
   }
 
@@ -523,7 +527,7 @@ class BuildListView extends StatelessWidget {
           return new ListView.builder(
             itemCount: snapshot.data.documents.length,
             padding: const EdgeInsets.only(top: 10.0),
-            itemExtent: 80.0,
+            itemExtent: 100.0,
             itemBuilder: (context, index) {
               DocumentSnapshot ds = snapshot.data.documents[index];
               var perk1 = _getPerkFromID(ds['perk1']);
@@ -552,19 +556,22 @@ class BuildListViewCell extends StatelessWidget {
         Navigator.pop(context, {"perk1": perk1, "perk2": perk2, "perk3": perk3, "perk4": perk4});
       },
       child: new Card(
-        child: new Column(
-          children: [
-            new Row(
-              children: [
-                new Expanded(
-                  child: new Text(buildName),
-                )
-              ]
-            ),
-            new Row(children: [new Expanded(child: new Text(perk1.name)), new Expanded(child: new Text(perk2.name))]),
-            new Row(children: [new Expanded(child: new Text(perk3.name)), new Expanded(child: new Text(perk4.name))]),
-          ],
+        child: new Padding(
+          padding: const EdgeInsets.all(4.0),
+          child: new Column(
+            children: [
+              new Row(
+                children: [
+                  new Expanded(
+                    child: new Text(buildName, style: Theme.of(context).primaryTextTheme.subhead,),
+                  )
+                ]
+              ),
+              new Row(children: [new Expanded(child: new Text(perk1.name)), new Expanded(child: new Text(perk2.name))]),
+              new Row(children: [new Expanded(child: new Text(perk3.name)), new Expanded(child: new Text(perk4.name))]),
+            ],
       ),
+        ),
       ),
     );
   }
