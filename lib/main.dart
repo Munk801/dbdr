@@ -657,15 +657,18 @@ class PerkListViewCellState extends State<PerkListViewCell> {
         Navigator.pop(context, widget.perk);
       },
       child: new Card(
-          child: new Row(children: <Widget>[
-        new FadeInImage.memoryNetwork(
-          image: widget.perk.thumbnail,
-          placeholder: kTransparentImage,
+        child: new Row(
+          children: <Widget>[
+            new FadeInImage.memoryNetwork(
+              image: widget.perk.thumbnail,
+              placeholder: kTransparentImage,
+            ),
+            new Expanded(
+              child: new Text(widget.perk.name.toUpperCase()),
+            )
+          ]
         ),
-        new Expanded(
-          child: new Text(widget.perk.name.toUpperCase()),
-        )
-      ])),
+      ),
     );
   }
 }
