@@ -10,7 +10,7 @@ class DBDRStorageManager {
   static final sharedInstance = new DBDRStorageManager();
   FirebaseStorage storage;
 
-  Future<Null> initialize() async {
+  Future<Null> initialize({String apiKey}) async {
     await FirebaseApp
         .configure(
       name: 'DBDR',
@@ -19,7 +19,7 @@ class DBDRStorageManager {
             ? '1:612079491419:ios:472df683bdd23490'
             : '1:612079491419:android:472df683bdd23490',
         gcmSenderID: '612079491419',
-        apiKey: Platform.environment['FIREBASE_DBDR_APIKEY'],
+        apiKey: apiKey,
         projectID: 'dbdr-6fbb1',
       ),
     )

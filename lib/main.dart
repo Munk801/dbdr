@@ -1,5 +1,6 @@
 // Dart
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 // External Packages
@@ -7,6 +8,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:transparent_image/transparent_image.dart';
+import 'package:flutter/services.dart' show rootBundle;
+
 
 // Internal Packages
 import 'constants.dart';
@@ -18,7 +21,9 @@ final FirebaseAuth _auth = FirebaseAuth.instance;
 enum PlayerRole {survivor, killer}
 
 void main() async {
-  DBDRStorageManager.sharedInstance.initialize();
+  rootBundle.loadString('FIREBASE_APIKEY.txt').then((config){ 
+    DBDRStorageManager.sharedInstance.initialize(apiKey: config);
+  });
   runApp(new MyApp());
 }
 
