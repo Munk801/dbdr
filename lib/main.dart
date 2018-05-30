@@ -27,14 +27,14 @@ class PerkManager {
   static final sharedInstance = PerkManager();
 
   List<Perk> _getPerks(QuerySnapshot query) {
-    var perks = List<Perk>();
-    for (var document in query.documents) {
-      var perk = Perk.fromDocument(document);
-      perks.add(perk);
-    }
+    // Converts the documents from the snapshot to perks
+    var perks = query.documents
+      .map((document) => Perk.fromDocument(document))
+      .toList();
     return perks;
   }
-  Future<List<Perk>> get({PlayerRole role}) async {
+  Future<List<Perk>> getAll({PlayerRole role}) async {
+    // Retrieve all perks based on the playe rrole
     var roleString = role == PlayerRole.survivor ? 'survivor' : 'killer';
     var perksDocs = await Firestore.instance.collection('perks')
       .where('role', isEqualTo: roleString)
@@ -109,36 +109,16 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
 
   final buildTextEditingController = new TextEditingController();
 
-  _getPerks(QuerySnapshot query) {
-    for (var document in query.documents) {
-      var perk = Perk.fromDocument(document);
-      setState(() => perks.add(perk));
-    }
-    _randomizePerks(PlayerRole.survivor);
-  }
-
-  _getKillerPerks(QuerySnapshot query) {
-    for (var document in query.documents) {
-      var perk = Perk.fromDocument(document);
-      setState(() => killerPerks.add(perk));
-    }
-    _randomizePerks(PlayerRole.killer);
-  }
-
-
   @override
   void initState() {
     _tabController = TabController(vsync: this, length: 2);
-    // Retrieve all the perks
-    // Firestore.instance.collection('perks').where('role', isEqualTo: 'survivor').getDocuments().then(_getPerks);
-    // Firestore.instance.collection('perks').where('role', isEqualTo: 'killer').getDocuments().then(_getKillerPerks);
-    PerkManager.sharedInstance.get(role: PlayerRole.survivor).then((sPerks) {
+    PerkManager.sharedInstance.getAll(role: PlayerRole.survivor).then((sPerks) {
       setState(() {
         perks = sPerks;
         _randomizePerks(PlayerRole.survivor);
       });
     });
-    PerkManager.sharedInstance.get(role: PlayerRole.killer).then((kPerks) {
+    PerkManager.sharedInstance.getAll(role: PlayerRole.killer).then((kPerks) {
       setState(() {
         killerPerks = kPerks;
         _randomizePerks(PlayerRole.killer);
