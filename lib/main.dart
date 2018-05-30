@@ -19,18 +19,43 @@ final FirebaseAuth _auth = FirebaseAuth.instance;
 
 enum PlayerRole {survivor, killer}
 
+class Environment {
+
+}
+
+class PerkManager {
+  static final sharedInstance = PerkManager();
+
+  List<Perk> _getPerks(QuerySnapshot query) {
+    var perks = List<Perk>();
+    for (var document in query.documents) {
+      var perk = Perk.fromDocument(document);
+      perks.add(perk);
+    }
+    return perks;
+  }
+  Future<List<Perk>> get({PlayerRole role}) async {
+    var roleString = role == PlayerRole.survivor ? 'survivor' : 'killer';
+    var perksDocs = await Firestore.instance.collection('perks')
+      .where('role', isEqualTo: roleString)
+      .getDocuments();
+    var perks = _getPerks(perksDocs);
+    return perks;
+  }
+}
+
 void main() async {
   rootBundle.loadString('FIREBASE_APIKEY.txt').then((config){ 
     DBDRStorageManager.sharedInstance.initialize(apiKey: config);
+    runApp(new MyApp());
   });
-  runApp(new MyApp());
 }
 
 TextTheme _buildDBDTextTheme(TextTheme base) {
   return base
       .copyWith(
         title: base.title.copyWith(fontWeight: FontWeight.w300, fontSize: 20.0),
-        headline: base.headline.copyWith(fontWeight: FontWeight.w300),
+        headline: base.headline.copyWith(fontWeight: FontWeight.w800),
         caption: base.caption.copyWith(fontWeight: FontWeight.w200, fontSize: 14.0),
         body1: base.body1.copyWith(fontWeight: FontWeight.w300, fontSize: 16.0)
       )
@@ -105,13 +130,28 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
   void initState() {
     _tabController = TabController(vsync: this, length: 2);
     // Retrieve all the perks
-    Firestore.instance.collection('perks').where('role', isEqualTo: 'survivor').getDocuments().then(_getPerks);
-    Firestore.instance.collection('perks').where('role', isEqualTo: 'killer').getDocuments().then(_getKillerPerks);
+    // Firestore.instance.collection('perks').where('role', isEqualTo: 'survivor').getDocuments().then(_getPerks);
+    // Firestore.instance.collection('perks').where('role', isEqualTo: 'killer').getDocuments().then(_getKillerPerks);
+    PerkManager.sharedInstance.get(role: PlayerRole.survivor).then((sPerks) {
+      setState(() {
+        perks = sPerks;
+        _randomizePerks(PlayerRole.survivor);
+      });
+    });
+    PerkManager.sharedInstance.get(role: PlayerRole.killer).then((kPerks) {
+      setState(() {
+        killerPerks = kPerks;
+        _randomizePerks(PlayerRole.killer);
+      });
+    });
     for (var i = 0; i < 4; i++) {
       perkBuild.add(new Perk.empty());
       killerPerkBuild.add(new Perk.empty());
     }
-    _auth.signInAnonymously().then((user) => currentUser = user);
+    // Attempt to sign in anonymously to save builds
+    _auth.signInAnonymously().then((user) => currentUser = user).catchError((e) {
+      print("Error while signing in: $e");
+    });
     super.initState();
   }
 
@@ -502,7 +542,7 @@ class PerkDescriptionSheet extends StatelessWidget {
     return new Padding(
       padding: const EdgeInsets.all(20.0),
       child: new Container(
-        color: Colors.grey,
+        color: kDbdRed,
         child: new Column(
           children: <Widget>[
             new Expanded(
@@ -510,7 +550,7 @@ class PerkDescriptionSheet extends StatelessWidget {
             ),
             new Text(
               perk.name.toUpperCase(),
-              style: Theme.of(context).accentTextTheme.headline,
+              style: Theme.of(context).primaryTextTheme.headline,
             ),
             new Padding(
               padding: const EdgeInsets.all(8.0),
