@@ -103,7 +103,7 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
       killerPerkBuild.add(new Perk.empty());
     }
     // Attempt to sign in anonymously to save builds
-    _auth.signInAnonymously().then((user) => currentUser = user).catchError((e) {
+    _auth.signInAnonymously().then((user) => currentUser = null).catchError((e) {
       print("Error while signing in: $e");
     });
     super.initState();
@@ -116,12 +116,40 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
     super.dispose();
   }
 
+  void _signInAnonymously(BuildContext context) {
+    _auth
+      .signInAnonymously()
+      .then((user) => currentUser = user)
+      .catchError((e) {
+        print("Error while signing in: $e");
+      });
+  }
+
   PlayerRole _getRoleFromTabIndex() {
     var role = _tabController.index == 0 ? PlayerRole.survivor : PlayerRole.killer;
     return role;
   }
 
-  _navigateAndDisplayBuildListView(BuildContext context) async {
+  bool _checkLoggedInStatus(BuildContext context) {
+    if (currentUser == null) {
+      Scaffold.of(context).showSnackBar(
+        new SnackBar(
+          content: new Text("Unable to connect to server.",),
+          action: new SnackBarAction(
+            label: "Retry", 
+            onPressed: () {
+             _signInAnonymously(context); 
+            },
+          )
+        ),
+      );
+      return false;
+    }
+    return true;
+  }
+
+  Future<Null> _navigateAndDisplayBuildListView(BuildContext context) async {
+    if (!_checkLoggedInStatus(context)) {return;}
     var role = _getRoleFromTabIndex();
     var perkList = role == PlayerRole.survivor ? PerkManager.sharedInstance.survivorPerks : PerkManager.sharedInstance.killerPerks;
     var result = await Navigator.push(
@@ -221,9 +249,6 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
   }
 
   Future<Null> _favoriteBuild(PlayerRole role) async {
-    if (currentUser == null) {
-      return;
-    }
     var perkList = role == PlayerRole.survivor ? perkBuild : killerPerkBuild;
     var roleString = role == PlayerRole.survivor ? 'survivor' : 'killer';
     var name = buildTextEditingController.text;
@@ -240,24 +265,32 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
     return;
   }
 
-  _showFavoriteBuildDialog(BuildContext context) {
-   return showDialog(
-    context: context,
-    builder: (dialogContext) {
-      var role = _getRoleFromTabIndex();
-      return new BuildNameAlertDialog(buildTextEditingController, (isSuccess) {
-        if (isSuccess) {
-          _favoriteBuild(role);
-          Scaffold.of(context).showSnackBar(
-            new SnackBar(content: new Text("Build has been saved.", textAlign: TextAlign.center, style: Theme.of(context).primaryTextTheme.subhead,))
-          );
-        }
-        Navigator.of(dialogContext).pop();
-      });
-    },
-  ).then((value) {
-  }); 
-}
+  void _showFavoriteBuildDialog(BuildContext context) {
+    if (!_checkLoggedInStatus(context)) {return;}
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        var role = _getRoleFromTabIndex();
+        return new BuildNameAlertDialog(buildTextEditingController, (isSuccess) {
+          if (isSuccess) {
+            _favoriteBuild(role);
+            Scaffold.of(context).showSnackBar(
+              new SnackBar(
+                content: new Text(
+                  "Build has been saved.", 
+                  textAlign: TextAlign.center, 
+                  style: Theme.of(context).primaryTextTheme.subhead,),
+              )
+            );
+          }
+          // Pop and remove text of build name from text controller
+          buildTextEditingController.clear();
+          Navigator.of(dialogContext).pop();
+        });
+      },
+    ).then((value) {
+    }); 
+  }
 
 List<Widget> _createPerkSlotFromBuild(List<Perk> perkBuild) {
   var perkSlotViews = List<Widget>();
@@ -296,11 +329,15 @@ List<Widget> _createPerkSlotFromBuild(List<Perk> perkBuild) {
               );
             }
           ),
-          new IconButton(
-            onPressed: () {
-                _navigateAndDisplayBuildListView(context);
-            }, 
-            icon: const Icon(Icons.more_vert)
+          new Builder(
+            builder: (context) {
+              return new IconButton(
+                onPressed: () {
+                  _navigateAndDisplayBuildListView(context);
+                }, 
+                icon: const Icon(Icons.more_vert)
+              );
+            }
           ),
         ],
       ),
@@ -350,13 +387,13 @@ class BuildNameAlertDialog extends StatelessWidget {
         new FlatButton(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(const Radius.circular(8.0))),
           color: Theme.of(context).primaryColor,
-          onPressed: () {completion(false);},
+          onPressed: () => completion(false),
           child: new Text("Cancel".toUpperCase(), style: Theme.of(context).primaryTextTheme.button),
         ),
         new FlatButton(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(const Radius.circular(8.0))),
           color: Theme.of(context).accentColor,
-          onPressed: () {completion(true);},
+          onPressed: () => completion(true),
           child: new Text("Done".toUpperCase(), style: Theme.of(context).primaryTextTheme.button),
         )
       ],

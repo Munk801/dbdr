@@ -3,6 +3,7 @@ import 'dart:async';
 
 // External Packages
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 // Internal Packages
 import 'perk.dart';
@@ -13,6 +14,19 @@ String _getRoleString(PlayerRole role) {
 
 class Environment {
 
+}
+
+class AuthManager {
+  static final sharedInstance = AuthManager();
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseUser currentUser;
+
+  signIn() {
+    _auth.signInAnonymously().then((user) => currentUser = user).catchError((e) {
+      print("Error while signing in: $e");
+    });
+  }      
 }
 
 class PerkManager {
@@ -27,7 +41,7 @@ class PerkManager {
       .toList();
     return perks;
   }
-  Future<void> getAll({PlayerRole role}) async {
+  Future<Null> getAll({PlayerRole role}) async {
     // Retrieve all perks based on the playe rrole
     var roleString = role == PlayerRole.survivor ? 'survivor' : 'killer';
     var perksDocs = await Firestore.instance.collection('perks')
