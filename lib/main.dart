@@ -19,6 +19,10 @@ final FirebaseAuth _auth = FirebaseAuth.instance;
 
 enum PlayerRole {survivor, killer}
 
+String _getRoleString(PlayerRole role) {
+  return role == PlayerRole.survivor ? 'survivor' : 'killer';
+}
+
 class Environment {
 
 }
@@ -42,6 +46,15 @@ class PerkManager {
     var perks = _getPerks(perksDocs);
     return perks;
   }
+
+  Stream<QuerySnapshot> getUserBuilds({PlayerRole role, String uid}) {
+    var roleString = _getRoleString(role);
+    return Firestore.instance.collection('builds')
+      .where("user", isEqualTo: uid)
+      .where('role', isEqualTo: roleString)
+      .snapshots();
+  }
+
 }
 
 void main() async {
@@ -565,23 +578,33 @@ class BuildListView extends StatelessWidget {
       appBar: new AppBar(
         leading: new BackButton(),
         centerTitle: true,
-        title: const Text('Select a Build'),
+        title: new Text('$roleString builds'.toUpperCase()),
       ),
       body: new StreamBuilder(
-        stream: Firestore.instance.collection('builds').where("user", isEqualTo: currentUser.uid).where('role', isEqualTo: roleString).snapshots(),
+        stream: PerkManager.sharedInstance.getUserBuilds(role: role, uid: currentUser.uid),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const Text('Loading...');
+          print("Snapshot Data: ${snapshot.data}");
+          // builds.add(snapshot.data);
           return new ListView.builder(
-            itemCount: snapshot.data.documents.length,
+            itemCount: snapshot.data.documents.length, //builds.length,
             padding: const EdgeInsets.only(top: 10.0),
             itemExtent: 100.0,
             itemBuilder: (context, index) {
-              DocumentSnapshot ds = snapshot.data.documents[index];
+              // var perkMap = snapshot.data;
+              // var buildName = perkMap['name'];
+              // var perk1 = _getPerkFromID(perkMap['perk1']);
+              // var perk2 = _getPerkFromID(perkMap['perk2']);
+              // var perk3 = _getPerkFromID(perkMap['perk3']);
+              // var perk4 = _getPerkFromID(perkMap['perk4']);
+
+              var ds = snapshot.data.documents[index];
+              var buildName = ds['name'];
               var perk1 = _getPerkFromID(ds['perk1']);
               var perk2 = _getPerkFromID(ds['perk2']);
               var perk3 = _getPerkFromID(ds['perk3']);
               var perk4 = _getPerkFromID(ds['perk4']);
-              return new BuildListViewCell(buildName: ds['name'], perk1: perk1, perk2: perk2, perk3: perk3, perk4: perk4);
+              return new BuildListViewCell(buildName: buildName, perk1: perk1, perk2: perk2, perk3: perk3, perk4: perk4);
             }
           );
         }

@@ -14,3 +14,7 @@ class Perk {
     description = document['description'];
   }
 }
+
+class PerkBuild {
+  
+}
