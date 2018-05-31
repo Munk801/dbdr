@@ -29,6 +29,8 @@ class Environment {
 
 class PerkManager {
   static final sharedInstance = PerkManager();
+  List<Perk> survivorPerks = [];
+  List<Perk> killerPerks = [];
 
   List<Perk> _getPerks(QuerySnapshot query) {
     // Converts the documents from the snapshot to perks
@@ -37,14 +39,22 @@ class PerkManager {
       .toList();
     return perks;
   }
-  Future<List<Perk>> getAll({PlayerRole role}) async {
+  Future<void> getAll({PlayerRole role}) async {
     // Retrieve all perks based on the playe rrole
     var roleString = role == PlayerRole.survivor ? 'survivor' : 'killer';
     var perksDocs = await Firestore.instance.collection('perks')
       .where('role', isEqualTo: roleString)
       .getDocuments();
-    var perks = _getPerks(perksDocs);
-    return perks;
+    switch (role) {
+      case PlayerRole.survivor:
+        survivorPerks = _getPerks(perksDocs);
+        break;
+      case PlayerRole.killer:
+        killerPerks = _getPerks(perksDocs);
+        break;
+      default:
+        break;
+    }
   }
 
   Stream<QuerySnapshot> getUserBuilds({PlayerRole role, String uid}) {
@@ -112,8 +122,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
-  List<Perk> perks = [];
-  List<Perk> killerPerks = [];
+  // List<Perk> perks = [];
+  // List<Perk> killerPerks = [];
   List<Perk> perkBuild = [];
   List<Perk> killerPerkBuild = [];
   int numPerks = 4;
@@ -125,15 +135,13 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
   @override
   void initState() {
     _tabController = TabController(vsync: this, length: 2);
-    PerkManager.sharedInstance.getAll(role: PlayerRole.survivor).then((sPerks) {
+    PerkManager.sharedInstance.getAll(role: PlayerRole.survivor).then((onReturn) {
       setState(() {
-        perks = sPerks;
         _randomizePerks(PlayerRole.survivor);
       });
     });
-    PerkManager.sharedInstance.getAll(role: PlayerRole.killer).then((kPerks) {
+    PerkManager.sharedInstance.getAll(role: PlayerRole.killer).then((onReturn) {
       setState(() {
-        killerPerks = kPerks;
         _randomizePerks(PlayerRole.killer);
       });
     });
@@ -162,7 +170,7 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
 
   _navigateAndDisplayBuildListView(BuildContext context) async {
     var role = _getRoleFromTabIndex();
-    var perkList = role == PlayerRole.survivor ? perks : killerPerks;
+    var perkList = role == PlayerRole.survivor ? PerkManager.sharedInstance.survivorPerks : PerkManager.sharedInstance.killerPerks;
     var result = await Navigator.push(
       context,
       new MaterialPageRoute(builder: (context) => new BuildListView(currentUser: currentUser, perks: perkList, role: role)),
@@ -197,7 +205,7 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
 
   _navigateAndDisplayPerkListView(BuildContext context, int index) async {
     var role = _getRoleFromTabIndex();
-    var perkList = role == PlayerRole.survivor ? perks : killerPerks;
+    var perkList = role == PlayerRole.survivor ? PerkManager.sharedInstance.survivorPerks: PerkManager.sharedInstance.killerPerks;
     var result = await Navigator.push(
       context,
       new MaterialPageRoute(builder: (context) => new PerkListView(perks: perkList, role: role)),
@@ -214,10 +222,10 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
     var perkList = List<Perk>();
     switch (role) {
       case PlayerRole.survivor:
-        perkList = perks;
+        perkList = PerkManager.sharedInstance.survivorPerks;
         break;
       case PlayerRole.killer:
-        perkList = killerPerks;
+        perkList = PerkManager.sharedInstance.killerPerks;
         break;
       default:
         print("Unable to find role");
@@ -584,8 +592,6 @@ class BuildListView extends StatelessWidget {
         stream: PerkManager.sharedInstance.getUserBuilds(role: role, uid: currentUser.uid),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const Text('Loading...');
-          print("Snapshot Data: ${snapshot.data}");
-          // builds.add(snapshot.data);
           return new ListView.builder(
             itemCount: snapshot.data.documents.length, //builds.length,
             padding: const EdgeInsets.only(top: 10.0),

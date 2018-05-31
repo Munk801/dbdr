@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+enum PlayerRole {survivor, killer}
+
 class Perk {
   String id, name, description;
   String thumbnail = "";
@@ -16,5 +18,9 @@ class Perk {
 }
 
 class PerkBuild {
-  
+  String id, name, user;
+  Perk perk1, perk2, perk3, perk4;
+  PlayerRole role;
+
+
 }
