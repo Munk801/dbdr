@@ -75,8 +75,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
-  // List<Perk> perks = [];
-  // List<Perk> killerPerks = [];
   List<Perk> perkBuild = [];
   List<Perk> killerPerkBuild = [];
   int numPerks = 4;
@@ -89,21 +87,17 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
   void initState() {
     _tabController = TabController(vsync: this, length: 2);
     PerkManager.sharedInstance.getAll(role: PlayerRole.survivor).then((onReturn) {
-      setState(() {
-        _randomizePerks(PlayerRole.survivor);
-      });
+      _randomizePerks(PlayerRole.survivor);
     });
     PerkManager.sharedInstance.getAll(role: PlayerRole.killer).then((onReturn) {
-      setState(() {
-        _randomizePerks(PlayerRole.killer);
-      });
+      _randomizePerks(PlayerRole.killer);
     });
     for (var i = 0; i < 4; i++) {
       perkBuild.add(new Perk.empty());
       killerPerkBuild.add(new Perk.empty());
     }
     // Attempt to sign in anonymously to save builds
-    _auth.signInAnonymously().then((user) => currentUser = null).catchError((e) {
+    _auth.signInAnonymously().then((user) => currentUser = user).catchError((e) {
       print("Error while signing in: $e");
     });
     super.initState();
