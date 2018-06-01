@@ -242,7 +242,7 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
     }
   }
 
-  Future<Null> _favoriteBuild(PlayerRole role) async {
+  Future _favoriteBuild(PlayerRole role) async {
     var perkList = role == PlayerRole.survivor ? perkBuild : killerPerkBuild;
     var roleString = role == PlayerRole.survivor ? 'survivor' : 'killer';
     var name = buildTextEditingController.text;
@@ -256,7 +256,6 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
       "role": roleString,
     }; 
     await Firestore.instance.collection("builds").add(buildData);
-    return;
   }
 
   void _showFavoriteBuildDialog(BuildContext context) {
@@ -267,7 +266,7 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
         var role = _getRoleFromTabIndex();
         return new BuildNameAlertDialog(buildTextEditingController, (isSuccess) {
           if (isSuccess) {
-            _favoriteBuild(role);
+            _favoriteBuild(role).then((noop) => buildTextEditingController.clear());
             Scaffold.of(context).showSnackBar(
               new SnackBar(
                 content: new Text(
@@ -278,7 +277,6 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
             );
           }
           // Pop and remove text of build name from text controller
-          buildTextEditingController.clear();
           Navigator.of(dialogContext).pop();
         });
       },
