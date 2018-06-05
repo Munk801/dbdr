@@ -59,6 +59,7 @@ class MyApp extends StatelessWidget {
       title: 'DBD:R',
       home: MyHomePage(title: 'DBD:R'),
       theme: _buildTheme(),
+      // debugShowCheckedModeBanner: false,
     );
   }
 }
