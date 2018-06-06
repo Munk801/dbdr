@@ -10,23 +10,9 @@ class DBDRStorageManager {
   static final sharedInstance = new DBDRStorageManager();
   FirebaseStorage storage;
 
-  Future<Null> initialize({String apiKey}) async {
-    await FirebaseApp
-        .configure(
-      name: 'DBDR',
-      options: new FirebaseOptions(
-        googleAppID: Platform.isIOS
-            ? '1:612079491419:ios:472df683bdd23490'
-            : '1:612079491419:android:472df683bdd23490',
-        gcmSenderID: '612079491419',
-        apiKey: apiKey,
-        projectID: 'dbdr-6fbb1',
-      ),
-    )
-        .then((app) {
-      this.storage = new FirebaseStorage(
-          app: app, storageBucket: 'gs://dbdr-6fbb1.appspot.com');
-    });
+  void initialize({FirebaseApp app}) {
+    this.storage = new FirebaseStorage(app: app, 
+      storageBucket: 'gs://dbdr-6fbb1.appspot.com');
   }
 
   Future<String> getPerkImageURL(Perk perk) async {

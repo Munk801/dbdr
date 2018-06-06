@@ -1,10 +1,12 @@
 // Dart
 import 'dart:async';
 import 'dart:math';
+import 'dart:io';
 
 // External Packages
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -22,8 +24,21 @@ final FirebaseAuth _auth = FirebaseAuth.instance;
 
 void main() async {
   rootBundle.loadString('FIREBASE_APIKEY.txt').then((config){ 
-    DBDRStorageManager.sharedInstance.initialize(apiKey: config);
-    runApp(new MyApp());
+    FirebaseApp.configure(
+      name: 'DBDR',
+      options: new FirebaseOptions(
+        googleAppID: Platform.isIOS
+            ? '1:612079491419:ios:472df683bdd23490'
+            : '1:612079491419:android:472df683bdd23490',
+        gcmSenderID: '612079491419',
+        apiKey: config,
+        projectID: 'dbdr-6fbb1',
+      ),
+    ).then((app) {
+      DBDRStorageManager.sharedInstance.initialize(app: app);
+      PerkManager.sharedInstance.initialize(app: app);
+      runApp(new MyApp());
+    });
   });
 }
 
@@ -87,20 +102,23 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
   @override
   void initState() {
     _tabController = TabController(vsync: this, length: 2);
-    PerkManager.sharedInstance.getAll(role: PlayerRole.survivor).then((onReturn) {
-      _randomizePerks(PlayerRole.survivor);
-    });
-    PerkManager.sharedInstance.getAll(role: PlayerRole.killer).then((onReturn) {
-      _randomizePerks(PlayerRole.killer);
+    // Attempt to sign in anonymously to save builds
+    _auth.signInAnonymously()
+      .then((user) { 
+        currentUser = user;
+        PerkManager.sharedInstance.getAll(role: PlayerRole.survivor).then((onReturn) {
+          _randomizePerks(PlayerRole.survivor);
+        });
+        PerkManager.sharedInstance.getAll(role: PlayerRole.killer).then((onReturn) {
+          _randomizePerks(PlayerRole.killer);
+        });
+      }).catchError((e) {
+      print("Error while signing in: $e");
     });
     for (var i = 0; i < 4; i++) {
       perkBuild.add(new Perk.empty());
       killerPerkBuild.add(new Perk.empty());
     }
-    // Attempt to sign in anonymously to save builds
-    _auth.signInAnonymously().then((user) => currentUser = user).catchError((e) {
-      print("Error while signing in: $e");
-    });
     super.initState();
   }
 

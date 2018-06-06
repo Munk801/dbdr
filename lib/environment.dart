@@ -1,9 +1,11 @@
 // Dart
 import 'dart:async';
+import 'dart:io';
 
 // External Packages
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 // Internal Packages
 import 'perk.dart';
@@ -31,6 +33,7 @@ class AuthManager {
 
 class PerkManager {
   static final sharedInstance = PerkManager();
+  Firestore firestore;
   List<Perk> survivorPerks = [];
   List<Perk> killerPerks = [];
 
@@ -41,10 +44,15 @@ class PerkManager {
       .toList();
     return perks;
   }
+
+  initialize({FirebaseApp app}) {
+    this.firestore = new Firestore(app: app);
+  }
+
   Future<Null> getAll({PlayerRole role}) async {
     // Retrieve all perks based on the playe rrole
     var roleString = role == PlayerRole.survivor ? 'survivor' : 'killer';
-    var perksDocs = await Firestore.instance.collection('perks')
+    var perksDocs = await firestore.collection('perks')
       .where('role', isEqualTo: roleString)
       .getDocuments();
     switch (role) {
