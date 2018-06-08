@@ -420,7 +420,9 @@ class PerkBuildView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return new LayoutBuilder(
+    return new OrientationBuilder(builder: (context, orientation) {
+      if (orientation == Orientation.portrait) {
+        return new LayoutBuilder(
       builder: (layoutContext, constraints) {
         var width = constraints.maxWidth / 2;
         var height = constraints.maxHeight / 3.33;
@@ -456,6 +458,15 @@ class PerkBuildView extends StatelessWidget {
         ]);
       },
     );
+    } else {
+      return new Padding(
+        padding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 60.0),
+        child: new Row(
+          children: columnChildren.map((perk) => new Expanded(child: perk)).toList(),
+        ),
+      );
+    }
+    },);
   }
 }
 
