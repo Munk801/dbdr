@@ -228,10 +228,11 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
     List<Perk> newPerkBuild = [];
     List<int> selected = [];
     for (var i = 0; i < 4; i++) {
-      var randomIndex = Random().nextInt(perkList.length);
+      var seed = new DateTime.now().microsecondsSinceEpoch;
+      var randomIndex = Random(seed).nextInt(perkList.length);
       // Ensure that we never get the same perk in the same slot
       while (selected.contains(randomIndex)) {
-        randomIndex = Random().nextInt(perkList.length);
+        randomIndex = Random(seed).nextInt(perkList.length);
       }
       var perkToAdd = perkList [randomIndex];
       // Retrieve the perk image and add it to the perk
