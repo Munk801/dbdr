@@ -1,6 +1,5 @@
 // Dart
 import 'dart:async';
-import 'dart:io';
 
 // External Packages
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -73,5 +72,9 @@ class PerkManager {
       .where("user", isEqualTo: uid)
       .where('role', isEqualTo: roleString)
       .snapshots();
+  }
+
+  Future<Null> removeBuild(String documentID) async {
+    await firestore.collection('builds').document(documentID).delete();
   }
 }
