@@ -102,23 +102,26 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
   @override
   void initState() {
     _tabController = TabController(vsync: this, length: 2);
-    // Attempt to sign in anonymously to save builds
-    _auth.signInAnonymously()
-      .then((user) { 
-        currentUser = user;
-        PerkManager.sharedInstance.getAll(role: PlayerRole.survivor).then((onReturn) {
-          _randomizePerks(PlayerRole.survivor);
-        });
-        PerkManager.sharedInstance.getAll(role: PlayerRole.killer).then((onReturn) {
-          _randomizePerks(PlayerRole.killer);
-        });
-      }).catchError((e) {
-      print("Error while signing in: $e");
-    });
+    // Initialize the build with empty perks
     for (var i = 0; i < 4; i++) {
       perkBuild.add(new Perk.empty());
       killerPerkBuild.add(new Perk.empty());
     }
+
+    // Attempt to sign in anonymously to save builds
+    _auth.signInAnonymously()
+      .then((user) { 
+        currentUser = user;
+        PerkManager.sharedInstance.getAll().then((onReturn) {
+          _randomizePerks(PlayerRole.survivor);
+          _randomizePerks(PlayerRole.killer);
+          // PerkManager.sharedInstance.getAll(role: PlayerRole.killer).then((onReturn) {
+          //   _randomizePerks(PlayerRole.killer);
+          // });
+        });
+      }).catchError((e) {
+      print("Error while signing in: $e");
+    });
     super.initState();
   }
 
@@ -227,20 +230,17 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
     }
     List<Perk> newPerkBuild = [];
     List<int> selected = [];
+    var seed = new DateTime.now().microsecondsSinceEpoch;
+    var random = Random(seed);
     for (var i = 0; i < 4; i++) {
-      var seed = new DateTime.now().microsecondsSinceEpoch;
-      var randomIndex = Random(seed).nextInt(perkList.length);
-      // Ensure that we never get the same perk in the same slot
-      while (selected.contains(randomIndex)) {
-        randomIndex = Random(seed).nextInt(perkList.length);
-      }
-      var perkToAdd = perkList [randomIndex];
+      var randomIndex = random.nextInt(perkList.length);
+      var perkToAdd = perkList[randomIndex];
       // Retrieve the perk image and add it to the perk
       DBDRStorageManager.sharedInstance
-          .getPerkImageURL(perkToAdd)
-          .then((image) {
-        setState(() {
-          perkToAdd.thumbnail = image;
+        .getPerkImageURL(perkToAdd)
+        .then((image) {
+          setState(() {
+            perkToAdd.thumbnail = image;
         });
       });
       newPerkBuild.add(perkToAdd);

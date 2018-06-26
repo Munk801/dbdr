@@ -36,9 +36,11 @@ class PerkManager {
   List<Perk> survivorPerks = [];
   List<Perk> killerPerks = [];
 
-  List<Perk> _getPerks(QuerySnapshot query) {
+  List<Perk> _getPerks(QuerySnapshot query, PlayerRole role) {
     // Converts the documents from the snapshot to perks
+    var roleString = role == PlayerRole.survivor ? 'survivor' : 'killer';
     var perks = query.documents
+      .where((snapshot) => snapshot['role'] == roleString)
       .map((document) => Perk.fromDocument(document))
       .toList();
     return perks;
@@ -48,22 +50,13 @@ class PerkManager {
     this.firestore = new Firestore(app: app);
   }
 
-  Future<Null> getAll({PlayerRole role}) async {
+  Future<Null> getAll() async {
     // Retrieve all perks based on the playe rrole
-    var roleString = role == PlayerRole.survivor ? 'survivor' : 'killer';
-    var perksDocs = await firestore.collection('perks')
-      .where('role', isEqualTo: roleString)
-      .getDocuments();
-    switch (role) {
-      case PlayerRole.survivor:
-        survivorPerks = _getPerks(perksDocs);
-        break;
-      case PlayerRole.killer:
-        killerPerks = _getPerks(perksDocs);
-        break;
-      default:
-        break;
-    }
+    await firestore.collection('perks')
+      .getDocuments().then((perksDocs) {
+          survivorPerks = _getPerks(perksDocs, PlayerRole.survivor);
+          killerPerks = _getPerks(perksDocs, PlayerRole.killer);
+      }).catchError((error) => print("Unable to get documents: $error"));
   }
 
   Stream<QuerySnapshot> getUserBuilds({PlayerRole role, String uid}) {
