@@ -211,7 +211,16 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
       return;
     }
     setState(() {
-      perkBuild[index] = result;
+      switch (role) {
+        case PlayerRole.survivor:
+          perkBuild[index] = result;
+          break;
+        case PlayerRole.killer:
+          killerPerkBuild[index] = result;
+          break;
+        default:
+          break;
+      }
     });
   }
 
