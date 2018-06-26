@@ -234,6 +234,10 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
     var random = Random(seed);
     for (var i = 0; i < 4; i++) {
       var randomIndex = random.nextInt(perkList.length);
+      while(selected.contains(randomIndex)) {
+        print("Random Index: $randomIndex.  Contained status: ${selected.contains(randomIndex)}");
+        randomIndex = random.nextInt(perkList.length);
+      }
       var perkToAdd = perkList[randomIndex];
       // Retrieve the perk image and add it to the perk
       DBDRStorageManager.sharedInstance
