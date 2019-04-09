@@ -18,4 +18,4 @@ paste your firebase api key in that text file
 
 This app has been set up for release on android.  This requires you create a key file and reference this.  For more information, please refer to: 
 
-https://github.com/Munk801/dbdr.git
+https://flutter.dev/docs/deployment/android#signing-the-app
