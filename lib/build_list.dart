@@ -51,12 +51,26 @@ class BuildListView extends StatelessWidget {
                   var perk4 = _getPerkFromID(ds['perk4']);
                   return new Dismissible(
                     key: new Key(id),
+                    confirmDismiss: (direction) {
+                      return showDialog(
+                        context: context,
+                        builder: (dialogContext) {
+                          return new ConfirmDeleteBuildDialog((shouldDelete) => Navigator.of(context).pop(shouldDelete));
+                        }
+                      );
+                    },
                     onDismissed: (direction) {
                       PerkManager.sharedInstance.removeBuild(id).then((_) {
                         showPerkBuildDeletionSnackBar(context);
                       });
                     },
-                    background: new Container(color: kDbdRed),
+                    background: new Container(
+                      color: kDbdRed, 
+                      child: new Align(
+                        alignment: const Alignment(0.8, 0.0),
+                        child: const Text('DELETE'),
+                        ) 
+                      ),
                     child: BuildListViewCell(
                         buildName: buildName,
                         perk1: perk1,
@@ -67,6 +81,33 @@ class BuildListView extends StatelessWidget {
                 },
               );
             }));
+  }
+}
+
+class ConfirmDeleteBuildDialog extends StatelessWidget {
+  final ValueChanged<bool> completion; 
+
+  ConfirmDeleteBuildDialog(this.completion);
+
+  @override
+  Widget build(BuildContext context) {
+    return new AlertDialog(
+      title: new Text("This will delete your build.  Are you sure you would like to delete?".toUpperCase(), style: Theme.of(context).primaryTextTheme.subhead),
+      actions: <Widget>[
+        new FlatButton(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(const Radius.circular(8.0))),
+          color: Theme.of(context).primaryColor,
+          onPressed: () => completion(false),
+          child: new Text("No".toUpperCase(), style: Theme.of(context).primaryTextTheme.button),
+        ),
+        new FlatButton(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(const Radius.circular(8.0))),
+          color: Theme.of(context).accentColor,
+          onPressed: () => completion(true),
+          child: new Text("Yes".toUpperCase(), style: Theme.of(context).primaryTextTheme.button),
+        )
+      ],
+    );
   }
 }
 
