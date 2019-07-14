@@ -304,6 +304,7 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
       default:
         break;
     }
+    this.observer.analytics.logEvent(name: "randomized_perks");
   }
 
   Future _favoriteBuild(PlayerRole role) async {
@@ -320,6 +321,7 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
       "role": roleString,
     }; 
     await Firestore.instance.collection("builds").add(buildData);
+    this.observer.analytics.logEvent(name: "favorited_build", parameters: buildData);
   }
 
   void _showFavoriteBuildDialog(BuildContext context) {
