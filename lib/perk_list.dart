@@ -1,10 +1,9 @@
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:transparent_image/transparent_image.dart';
 
+import 'environment.dart';
 import 'perk.dart';
-import 'storage_manager.dart';
 
 class PerkListView extends StatelessWidget {
   final List<Perk> perks;
@@ -21,22 +20,16 @@ class PerkListView extends StatelessWidget {
         centerTitle: true,
         title: const Text('Select Perk'),
       ),
-      body: new StreamBuilder(
-        stream: Firestore.instance.collection('perks').where('role', isEqualTo: roleString).snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return const Text('Loading...');
-          return new ListView.builder(
-            itemCount: snapshot.data.documents.length,
-            padding: const EdgeInsets.only(top: 10.0),
-            itemExtent: 55.0,
-            itemBuilder: (context, index) {
-              DocumentSnapshot ds = snapshot.data.documents[index];
-              Perk perk = Perk.fromDocument(ds);
-              return new PerkListViewCell(perk);
-            }
+      body: new ListView.builder(
+        itemCount: PerkManager.sharedInstance.perks(role).length,
+        padding: const EdgeInsets.only(top: 10.0),
+        itemExtent: 55.0,
+        itemBuilder: (context, index) {
+          return new PerkListViewCell(
+            PerkManager.sharedInstance.perks(role)[index]
           );
         }
-      )
+      ),
     );
   }
 }
@@ -55,13 +48,6 @@ class PerkListViewCell extends StatefulWidget {
 class PerkListViewCellState extends State<PerkListViewCell> {
   @override
   void initState() {
-    DBDRStorageManager.sharedInstance
-        .getPerkImageURL(widget.perk)
-        .then((image) {
-      setState(() {
-        widget.perk.thumbnail = image;
-      });
-    });
     super.initState();
   }
 

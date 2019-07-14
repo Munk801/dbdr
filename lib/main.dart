@@ -5,6 +5,8 @@ import 'dart:io';
 
 // External Packages
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_analytics/observer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +23,9 @@ import 'perk_list.dart';
 import 'storage_manager.dart';
 
 final FirebaseAuth _auth = FirebaseAuth.instance;
+
+FirebaseAnalytics analytics = FirebaseAnalytics();
+FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(analytics: analytics);
 
 void main() async {
   rootBundle.loadString('FIREBASE_APIKEY.txt').then((config){ 
@@ -72,36 +77,53 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return new MaterialApp(
       title: 'DBD:R',
-      home: MyHomePage(title: 'DBD:R'),
+      home: MyHomePage(title: 'DBD:R', observer: observer),
       theme: _buildTheme(),
+      navigatorObservers: [
+        observer
+      ],
       // debugShowCheckedModeBanner: false,
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key key, this.title}) : super(key: key);
+  const MyHomePage({Key key, this.title, this.observer}) : super(key: key);
 
   final String title;
+  final FirebaseAnalyticsObserver observer;
 
   @override
   MyHomePageState createState() {
-    return new MyHomePageState();
+    return new MyHomePageState(observer);
   }
 }
 
 class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
+  MyHomePageState(this.observer);
+
+  final FirebaseAnalyticsObserver observer; 
+
   List<Perk> perkBuild = [];
   List<Perk> killerPerkBuild = [];
   int numPerks = 4;
   FirebaseUser currentUser;
   TabController _tabController;
+  int selectedIndex = 0;
 
   final buildTextEditingController = new TextEditingController();
 
   @override
   void initState() {
-    _tabController = TabController(vsync: this, length: 2);
+    _tabController = TabController(vsync: this, length: 2, initialIndex: selectedIndex);
+    _tabController.addListener(() { 
+      setState(() {
+        if (selectedIndex != _tabController.index) {
+          selectedIndex = _tabController.index;
+          _sendCurrentTabToAnalytics();
+        }
+      });
+    });
     // Initialize the build with empty perks
     for (var i = 0; i < 4; i++) {
       perkBuild.add(new Perk.empty());
@@ -115,9 +137,6 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
         PerkManager.sharedInstance.getAll().then((onReturn) {
           _randomizePerks(PlayerRole.survivor);
           _randomizePerks(PlayerRole.killer);
-          // PerkManager.sharedInstance.getAll(role: PlayerRole.killer).then((onReturn) {
-          //   _randomizePerks(PlayerRole.killer);
-          // });
         });
       }).catchError((e) {
       print("Error while signing in: $e");
@@ -170,7 +189,14 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
     var perkList = role == PlayerRole.survivor ? PerkManager.sharedInstance.survivorPerks : PerkManager.sharedInstance.killerPerks;
     var result = await Navigator.push(
       context,
-      new MaterialPageRoute(builder: (context) => new BuildListView(currentUser: currentUser, perks: perkList, role: role)),
+      new MaterialPageRoute(
+        builder: (context) => new BuildListView(
+          currentUser: currentUser, 
+          perks: perkList, 
+          role: role
+        ),
+        settings: RouteSettings(name: "BuildList")
+      ),
     );
     if (result == null) {
       return;
@@ -199,13 +225,18 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
     });
   }
 
-
   _navigateAndDisplayPerkListView(BuildContext context, int index) async {
     var role = _getRoleFromTabIndex();
     var perkList = role == PlayerRole.survivor ? PerkManager.sharedInstance.survivorPerks: PerkManager.sharedInstance.killerPerks;
     var result = await Navigator.push(
       context,
-      new MaterialPageRoute(builder: (context) => new PerkListView(perks: perkList, role: role)),
+      new MaterialPageRoute(
+        builder: (context) => new PerkListView(
+          perks: perkList, 
+          role: role
+        ),
+        settings: RouteSettings(name: "PerkList")
+      ),
     );{
     if (result == null) 
       return;
@@ -328,6 +359,14 @@ List<Widget> _createPerkSlotFromBuild(List<Perk> perkBuild) {
     perkSlotViews.add(slotView);
   }
   return perkSlotViews;
+}
+
+void _sendCurrentTabToAnalytics() {
+  var role = _getRoleFromTabIndex();
+  var roleString = role == PlayerRole.survivor ? 'survivor' : 'killer';
+  var screenName = 'PerksScreen:$roleString';
+  print("Sending analytics: $screenName");
+  this.observer.analytics.setCurrentScreen(screenName:  screenName);
 }
 
   @override

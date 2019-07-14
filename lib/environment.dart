@@ -3,6 +3,7 @@ import 'dart:async';
 
 // External Packages
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dbdr/storage_manager.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -41,7 +42,12 @@ class PerkManager {
     var roleString = role == PlayerRole.survivor ? 'survivor' : 'killer';
     var perks = query.documents
       .where((snapshot) => snapshot['role'] == roleString)
-      .map((document) => Perk.fromDocument(document))
+      .map((document) {
+        var perk = Perk.fromDocument(document);
+        DBDRStorageManager.sharedInstance.getPerkImageURL(perk)
+          .then((image) => perk.thumbnail = image);
+        return perk;
+      })
       .toList();
     return perks;
   }
@@ -56,7 +62,17 @@ class PerkManager {
       .getDocuments().then((perksDocs) {
           survivorPerks = _getPerks(perksDocs, PlayerRole.survivor);
           killerPerks = _getPerks(perksDocs, PlayerRole.killer);
+
       }).catchError((error) => print("Unable to get documents: $error"));
+  }
+
+  List<Perk> perks(role) {
+    if (role == PlayerRole.survivor) {
+      return survivorPerks;
+    } 
+    else {
+      return killerPerks;
+    }
   }
 
   Stream<QuerySnapshot> getUserBuilds({PlayerRole role, String uid}) {
