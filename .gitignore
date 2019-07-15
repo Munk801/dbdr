@@ -89,3 +89,5 @@ unlinked_spec.ds
 # API Keys
 FIREBASE_APIKEY.txt
 key.properties
+android/key.jks
+android/app/key.jks

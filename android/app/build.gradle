@@ -29,8 +29,8 @@ android {
         applicationId "com.lookmastudio.dbdr"
         minSdkVersion 16
         targetSdkVersion 28
-        versionCode 7
-        versionName "1.4"
+        versionCode 8
+        versionName "1.5"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
     }
@@ -46,6 +46,9 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.release
+            minifyEnabled true
+            useProguard true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
 }
