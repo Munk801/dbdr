@@ -178,12 +178,13 @@ class PerkThumbnailState extends State<PerkThumbnail> {
   @override
   void initState() {
     perk = widget.perk;
-    DBDRStorageManager.sharedInstance
-      .getPerkImageURL(perk)
-      .then((image) {
-        setState(() => perk.thumbnail = image);
-      });
-
+    if (perk.thumbnail == "") {
+      DBDRStorageManager.sharedInstance
+        .getPerkImageURL(perk)
+        .then((image) {
+          setState(() => perk.thumbnail = image);
+        });
+    }
     super.initState();
   }
 

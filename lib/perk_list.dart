@@ -4,6 +4,7 @@ import 'package:transparent_image/transparent_image.dart';
 
 import 'environment.dart';
 import 'perk.dart';
+import 'storage_manager.dart';
 
 class PerkListView extends StatelessWidget {
   final List<Perk> perks;
@@ -13,7 +14,6 @@ class PerkListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var roleString = role == PlayerRole.survivor ? "survivor" : "killer";
     return new Scaffold(
       appBar: new AppBar(
         leading: new BackButton(),
@@ -46,19 +46,28 @@ class PerkListViewCell extends StatefulWidget {
 }
 
 class PerkListViewCellState extends State<PerkListViewCell> {
+  FadeInImage thumbnail;
+
   @override
   void initState() {
     super.initState();
+    this.thumbnail = new FadeInImage.memoryNetwork(
+      image: widget.perk.thumbnail,
+      placeholder: kTransparentImage,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    Widget thumbnail = Container();
-    if (widget.perk.thumbnail != "") {
-      thumbnail = new FadeInImage.memoryNetwork(
-        image: widget.perk.thumbnail,
-        placeholder: kTransparentImage,
-      );
+    // Widget thumbnail = Container();
+    if (widget.perk.thumbnail == "") {
+      DBDRStorageManager.sharedInstance
+        .getPerkImageURL(widget.perk)
+        .then((image) {
+          setState(() {
+            widget.perk.thumbnail = image;
+        });
+      });
     }
     return new GestureDetector(
       onTap: () {

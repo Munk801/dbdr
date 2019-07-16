@@ -3,7 +3,6 @@ import 'dart:async';
 
 // External Packages
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dbdr/storage_manager.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -44,12 +43,9 @@ class PerkManager {
       .where((snapshot) => snapshot['role'] == roleString)
       .map((document) {
         var perk = Perk.fromDocument(document);
-        DBDRStorageManager.sharedInstance.getPerkImageURL(perk)
-          .then((image) => perk.thumbnail = image);
         return perk;
-      })
-      .toList();
-    return perks;
+      }).toList();
+      return perks;
   }
 
   initialize({FirebaseApp app}) {
@@ -59,10 +55,9 @@ class PerkManager {
   Future<Null> getAll() async {
     // Retrieve all perks based on the playe rrole
     await firestore.collection('perks')
-      .getDocuments().then((perksDocs) {
-          survivorPerks = _getPerks(perksDocs, PlayerRole.survivor);
-          killerPerks = _getPerks(perksDocs, PlayerRole.killer);
-
+      .getDocuments().then((perksDocs) async {
+        survivorPerks = _getPerks(perksDocs, PlayerRole.survivor);
+        killerPerks = _getPerks(perksDocs, PlayerRole.killer);
       }).catchError((error) => print("Unable to get documents: $error"));
   }
 

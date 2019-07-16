@@ -207,15 +207,15 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
       result['perk3'],
       result['perk4']
     ];
-    for (var perk in newPerkBuild) {
-      DBDRStorageManager.sharedInstance
-          .getPerkImageURL(perk)
-          .then((image) {
-        setState(() {
-          perk.thumbnail = image;
-        });
-      });
-    }
+    // for (var perk in newPerkBuild) {
+    //   DBDRStorageManager.sharedInstance
+    //       .getPerkImageURL(perk)
+    //       .then((image) {
+    //     setState(() {
+    //       perk.thumbnail = image;
+    //     });
+    //   });
+    // }
     setState(() {
       if (role == PlayerRole.survivor) {
         perkBuild = newPerkBuild;
@@ -279,14 +279,16 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
         randomIndex = random.nextInt(perkList.length);
       }
       var perkToAdd = perkList[randomIndex];
-      // Retrieve the perk image and add it to the perk
-      DBDRStorageManager.sharedInstance
-        .getPerkImageURL(perkToAdd)
-        .then((image) {
-          setState(() {
-            perkToAdd.thumbnail = image;
+      if (perkToAdd.thumbnail == "") {
+        // Retrieve the perk image and add it to the perk
+        DBDRStorageManager.sharedInstance
+          .getPerkImageURL(perkToAdd)
+          .then((image) {
+            setState(() {
+              perkToAdd.thumbnail = image;
+          });
         });
-      });
+      }
       newPerkBuild.add(perkToAdd);
       selected.add(randomIndex);
     }
