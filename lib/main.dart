@@ -10,6 +10,7 @@ import 'package:firebase_analytics/observer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
@@ -77,7 +78,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return new MaterialApp(
       title: 'DBD:R',
-      home: MyHomePage(title: 'DBD:R', observer: observer),
+      home: MyHomePage(
+        title: 'DBD RANDOMIZER', 
+        observer: observer, 
+      ),
       theme: _buildTheme(),
       navigatorObservers: [
         observer
@@ -386,6 +390,7 @@ void _sendCurrentTabToAnalytics() {
           ]
         ),
         title: new Text(widget.title),
+        centerTitle: true,
         actions: [
           new Builder(
             builder: (context) {
