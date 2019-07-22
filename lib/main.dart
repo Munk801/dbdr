@@ -115,6 +115,12 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
   TabController _tabController;
   int selectedIndex = 0;
 
+  List<Widget> _survivorPerkSlotViews = [];
+  List<Widget> _killerPerkSlotViews = [];
+
+  List<GlobalKey<_PerkSlotViewState>> _survivorPerkSlotKeys = [];
+  List<GlobalKey<_PerkSlotViewState>> _killerPerkSlotKeys = [];
+
   final buildTextEditingController = new TextEditingController();
 
   @override
@@ -132,7 +138,10 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
     for (var i = 0; i < 4; i++) {
       perkBuild.add(new Perk.empty());
       killerPerkBuild.add(new Perk.empty());
+      _survivorPerkSlotKeys.add(new GlobalKey<_PerkSlotViewState>());
+      _killerPerkSlotKeys.add(new GlobalKey<_PerkSlotViewState>());
     }
+
 
     // Attempt to sign in anonymously to save builds
     _auth.signInAnonymously()
@@ -211,15 +220,6 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
       result['perk3'],
       result['perk4']
     ];
-    // for (var perk in newPerkBuild) {
-    //   DBDRStorageManager.sharedInstance
-    //       .getPerkImageURL(perk)
-    //       .then((image) {
-    //     setState(() {
-    //       perk.thumbnail = image;
-    //     });
-    //   });
-    // }
     setState(() {
       if (role == PlayerRole.survivor) {
         perkBuild = newPerkBuild;
@@ -227,6 +227,28 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
         killerPerkBuild = newPerkBuild;
       }
     });
+  }
+
+  Map<int, Perk> _getLockedPerks(PlayerRole role) {
+    Map<int, Perk> lockedPerks = {}; 
+    if (role == PlayerRole.survivor) {
+      for (var i = 0; i < 4; i++) {
+        var slotKey = _survivorPerkSlotKeys[i];
+        if (slotKey.currentState != null && slotKey.currentState.isLocked) {
+          var perk = _survivorPerkSlotKeys[i].currentState.widget.perk;
+          lockedPerks[i] = perk;
+        }
+      }
+    } else {
+      for (var i = 0; i < 4; i++) {
+        var slotKey = _killerPerkSlotKeys[i];
+        if (slotKey.currentState != null && slotKey.currentState.isLocked) {
+          var perk = _killerPerkSlotKeys[i].currentState.widget.perk;
+          lockedPerks[i] = perk;
+        }
+      }
+    }
+    return lockedPerks;
   }
 
   _navigateAndDisplayPerkListView(BuildContext context, int index) async {
@@ -259,27 +281,36 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
     });
   }
 
-  _randomizePerks(PlayerRole role) {
+  void _randomizePerks(PlayerRole role) {
     var perkList = List<Perk>();
+    List<Perk> newPerkBuild = [];
+    Map<int, Perk> lockedPerks = {};
+    List<int> selected = [];
     switch (role) {
       case PlayerRole.survivor:
         perkList = PerkManager.sharedInstance.survivorPerks;
+        lockedPerks = this._getLockedPerks(PlayerRole.survivor);
         break;
       case PlayerRole.killer:
         perkList = PerkManager.sharedInstance.killerPerks;
+        lockedPerks = this._getLockedPerks(PlayerRole.killer);
         break;
       default:
         print("Unable to find role");
         break;
     }
-    List<Perk> newPerkBuild = [];
-    List<int> selected = [];
     var seed = new DateTime.now().microsecondsSinceEpoch;
     var random = Random(seed);
     for (var i = 0; i < 4; i++) {
+      // If the locked perk is in this slot, add that perk back to the build.
+      if (lockedPerks.keys.contains(i)) {
+        newPerkBuild.add(lockedPerks[i]);
+        var index = perkList.indexOf(lockedPerks[i]);
+        selected.add(index);
+        continue;
+      }
       var randomIndex = random.nextInt(perkList.length);
       while(selected.contains(randomIndex)) {
-        print("Random Index: $randomIndex.  Contained status: ${selected.contains(randomIndex)}");
         randomIndex = random.nextInt(perkList.length);
       }
       var perkToAdd = perkList[randomIndex];
@@ -356,12 +387,14 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
     }); 
   }
 
-List<Widget> _createPerkSlotFromBuild(List<Perk> perkBuild) {
+List<Widget> _createPerkSlotFromBuild(List<Perk> perkBuild, PlayerRole role) {
   var perkSlotViews = List<Widget>();
+  var perkKeys = role == PlayerRole.survivor ? _survivorPerkSlotKeys : _killerPerkSlotKeys;
   for (var i = 0; i < 4; i++) {
     var slotView = new PerkSlotView(
         perk: perkBuild[i],
         index: i,
+        key: perkKeys[i],
         onListPressed: (index) =>
             _navigateAndDisplayPerkListView(context, index));
     perkSlotViews.add(slotView);
@@ -373,14 +406,13 @@ void _sendCurrentTabToAnalytics() {
   var role = _getRoleFromTabIndex();
   var roleString = role == PlayerRole.survivor ? 'survivor' : 'killer';
   var screenName = 'PerksScreen:$roleString';
-  print("Sending analytics: $screenName");
   this.observer.analytics.setCurrentScreen(screenName:  screenName);
 }
 
   @override
   Widget build(BuildContext context) {
-    var survivorPerkSlotViews = _createPerkSlotFromBuild(perkBuild);
-    var killerPerkSlotViews = _createPerkSlotFromBuild(killerPerkBuild);
+    this._survivorPerkSlotViews = _createPerkSlotFromBuild(perkBuild, PlayerRole.survivor);
+    this._killerPerkSlotViews = _createPerkSlotFromBuild(killerPerkBuild, PlayerRole.killer);
     return new Scaffold(
       appBar: new AppBar(
         bottom: new TabBar(
@@ -419,11 +451,11 @@ void _sendCurrentTabToAnalytics() {
         children: [
           new Container(
             color: Theme.of(context).backgroundColor,
-            child: new PerkBuildView(survivorPerkSlotViews),
+            child: new PerkBuildView(this._survivorPerkSlotViews),
           ),
           new Container(
             color: Theme.of(context).backgroundColor,
-            child: new PerkBuildView(killerPerkSlotViews),
+            child: new PerkBuildView(this._killerPerkSlotViews),
           ),
         ]
       ),
@@ -531,23 +563,55 @@ class PerkBuildView extends StatelessWidget {
   }
 }
 
-class PerkSlotView extends StatelessWidget {
+class PerkSlotView extends StatefulWidget {
   const PerkSlotView({Key key, this.perk, this.index, this.onListPressed})
       : super(key: key);
   final Perk perk;
   final int index;
   final ValueChanged<int> onListPressed;
 
+  @override
+  _PerkSlotViewState createState() => _PerkSlotViewState();
+}
+
+class _PerkSlotViewState extends State<PerkSlotView> {
+  bool isLocked = false;
+  IconData lockIconData;
+  Color lockColor;
+
+  @override
+  void initState() {
+    super.initState();
+    this.lockIconData = getLockIcon();
+    this.lockColor = this.getLockColor();
+  }
+
+  IconData getLockIcon() {
+    return this.isLocked ? Icons.lock : Icons.lock_open;
+  }
+
+  Color getLockColor() {
+    return this.isLocked ? kDbdMutedRed : kDbdGrey;
+  }
+
   void _handleTap() {
-    onListPressed(index);
+    widget.onListPressed(widget.index);
+  }
+
+  void _handleLockTapped() {
+    this.isLocked = !this.isLocked;
+    setState(() {
+      this.lockIconData = this.getLockIcon();
+      this.lockColor = this.getLockColor();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     Widget thumbnail = Container();
-    if (perk.thumbnail != "") {
+    if (widget.perk.thumbnail != "") {
       thumbnail = new FadeInImage.memoryNetwork(
-        image: perk.thumbnail,
+        image: widget.perk.thumbnail,
         placeholder: kTransparentImage,
       );
     }
@@ -558,12 +622,12 @@ class PerkSlotView extends StatelessWidget {
           showModalBottomSheet(
               context: context,
               builder: (buildContext) {
-                return new PerkDescriptionSheet(perk);
+                return new PerkDescriptionSheet(widget.perk);
               });
         },
         child: Card(
           // shape: const _DiamondBorder(),
-          color: Theme.of(context).primaryColor,
+          color: this.lockColor,
           // color: kDbdRed,
           elevation: 8.0,
           child: new Padding(
@@ -577,11 +641,18 @@ class PerkSlotView extends StatelessWidget {
                       child: thumbnail,
                     ),
                     new Text(
-                      perk.name.toUpperCase(),
+                      widget.perk.name.toUpperCase(),
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.caption,
                     ),
                   ],
+                ),
+                new Align(
+                  alignment: Alignment.topLeft,
+                  child: new IconButton(
+                    onPressed: _handleLockTapped, 
+                    icon: new Icon(this.lockIconData),
+                  )
                 ),
                 new Align(
                   alignment: Alignment.topRight,
