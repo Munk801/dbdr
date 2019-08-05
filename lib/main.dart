@@ -48,28 +48,6 @@ void main() async {
   });
 }
 
-TextTheme _buildDBDTextTheme(TextTheme base) {
-  return base
-      .copyWith(
-        title: base.title.copyWith(fontWeight: FontWeight.w300, fontSize: 20.0),
-        headline: base.headline.copyWith(fontWeight: FontWeight.w800),
-        caption: base.caption.copyWith(fontWeight: FontWeight.w200, fontSize: 14.0),
-        body1: base.body1.copyWith(fontWeight: FontWeight.w300, fontSize: 16.0)
-      )
-      .apply(
-        fontFamily: "Open Sans",
-      );
-}
-
-ThemeData _buildTheme() {
-  final ThemeData base = ThemeData.dark();
-  return base.copyWith(
-    accentColor: kDbdRed,
-    textTheme: _buildDBDTextTheme(base.textTheme),
-    primaryTextTheme: _buildDBDTextTheme(base.primaryTextTheme),
-    accentTextTheme: _buildDBDTextTheme(base.accentTextTheme)
-  );
-}
 
 class MyApp extends StatelessWidget {
   const MyApp();
@@ -82,7 +60,7 @@ class MyApp extends StatelessWidget {
         title: 'DBD RANDOMIZER', 
         observer: observer, 
       ),
-      theme: _buildTheme(),
+      theme: THEME,
       navigatorObservers: [
         observer
       ],
@@ -286,19 +264,8 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
     List<Perk> newPerkBuild = [];
     Map<int, Perk> lockedPerks = {};
     List<int> selected = [];
-    switch (role) {
-      case PlayerRole.survivor:
-        perkList = PerkManager.sharedInstance.survivorPerks;
-        lockedPerks = this._getLockedPerks(PlayerRole.survivor);
-        break;
-      case PlayerRole.killer:
-        perkList = PerkManager.sharedInstance.killerPerks;
-        lockedPerks = this._getLockedPerks(PlayerRole.killer);
-        break;
-      default:
-        print("Unable to find role");
-        break;
-    }
+    perkList = PerkManager.sharedInstance.perks(role, ignoreFiltered: true);
+    lockedPerks = this._getLockedPerks(role);
     var seed = new DateTime.now().microsecondsSinceEpoch;
     var random = Random(seed);
     for (var i = 0; i < 4; i++) {
@@ -387,6 +354,24 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
     }); 
   }
 
+  void _showFilterPerksScreen(BuildContext context) async {
+    var role = _getRoleFromTabIndex();
+    var perkList = role == PlayerRole.survivor ? PerkManager.sharedInstance.survivorPerks: PerkManager.sharedInstance.killerPerks;
+    var result = await Navigator.push(
+      context,
+      new MaterialPageRoute(
+        builder: (context) => new FilterPerkListView(
+          perks: perkList, 
+          role: role
+        ),
+        settings: RouteSettings(name: "FilterPerks")
+      ),
+    );{
+    if (result == null) 
+      return;
+    }
+  }
+
 List<Widget> _createPerkSlotFromBuild(List<Perk> perkBuild, PlayerRole role) {
   var perkSlotViews = List<Widget>();
   var perkKeys = role == PlayerRole.survivor ? _survivorPerkSlotKeys : _killerPerkSlotKeys;
@@ -425,6 +410,12 @@ void _sendCurrentTabToAnalytics() {
         ),
         title: new Text(widget.title),
         centerTitle: true,
+        leading: new Builder(builder: (context) {
+              return new IconButton(
+                onPressed:  () => _showFilterPerksScreen(context),
+                icon: Icon(Icons.filter_list)
+              );
+          }),
         actions: [
           new Builder(
             builder: (context) {

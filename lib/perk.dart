@@ -3,8 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 enum PlayerRole {survivor, killer}
 
 class Perk {
-  String id, name, description;
+  String id, name, description, owner;
   String thumbnail = "";
+  bool isFiltered = false;
 
   Perk(this.id, this.name, this.description);
 
@@ -14,6 +15,7 @@ class Perk {
     id = document.documentID;
     name = document['name'];
     description = document['description'];
+    owner = document['owner'];
   }
 }
 

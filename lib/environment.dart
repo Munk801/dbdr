@@ -30,6 +30,12 @@ class AuthManager {
   }      
 }
 
+class OwnerHeader {
+  final String owner;
+
+  OwnerHeader(this.owner);
+}
+
 class PerkManager {
   static final sharedInstance = PerkManager();
   Firestore firestore;
@@ -61,13 +67,51 @@ class PerkManager {
       }).catchError((error) => print("Unable to get documents: $error"));
   }
 
-  List<Perk> perks(role) {
+  List<Perk> filter(List<Perk> perks) {
+    return perks.where((p) => !p.isFiltered).toList();
+  }
+
+  List<Perk> perks(role, {bool ignoreFiltered=false}) {
+    List<Perk> perks = [];
     if (role == PlayerRole.survivor) {
-      return survivorPerks;
-    } 
-    else {
-      return killerPerks;
+      perks = ignoreFiltered ? this.filter(survivorPerks) : survivorPerks;
+    } else {
+      perks = ignoreFiltered ? this.filter(killerPerks) : killerPerks;
     }
+    return perks;
+  }
+
+  Map<String, List<Perk>> rolePerkMap(PlayerRole role, {bool ignoreFiltered=false}) {
+    var perks = this.perks(role, ignoreFiltered: ignoreFiltered);
+    Map<String, List<Perk>> perkMap = {};
+    // Add the All categories first
+    perkMap["All"] = [];
+    for (var perk in perks) {
+      if (perk.owner == "") {
+        perkMap["All"].add(perk);
+      }
+      else if (perkMap.containsKey(perk.owner)) {
+        perkMap[perk.owner].add(perk);
+      }
+      else {
+        perkMap[perk.owner] = [perk];
+      }
+    }
+    return perkMap;
+  }
+
+  List flattenedOwnerPerkList(PlayerRole role, {bool ignoreFiltered=false}) {
+    /* Returns a flattened list in the following
+    [owner, perk, perk perk, owner ...]
+    This can be used to pass through a list view which you need the owner to be displayed
+    */
+    List perkList = [];
+    Map<String, List<Perk>> perkMap = this.rolePerkMap(role, ignoreFiltered: ignoreFiltered);
+    perkMap.forEach((owner, perks) {
+      perkList.add(owner);
+      perkList.addAll(perks);
+    });
+    return perkList;
   }
 
   Stream<QuerySnapshot> getUserBuilds({PlayerRole role, String uid}) {
