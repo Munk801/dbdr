@@ -11,11 +11,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:transparent_image/transparent_image.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 
 // Internal Packages
+import 'package:dbdr/ui/perk_slotview.dart';
+import 'package:dbdr/ui/perk_buildview.dart';
 import 'build_list.dart';
 import 'constants.dart';
 import 'environment.dart';
@@ -97,8 +98,8 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
   List<Widget> _survivorPerkSlotViews = [];
   List<Widget> _killerPerkSlotViews = [];
 
-  List<GlobalKey<_PerkSlotViewState>> _survivorPerkSlotKeys = [];
-  List<GlobalKey<_PerkSlotViewState>> _killerPerkSlotKeys = [];
+  List<GlobalKey<PerkSlotViewState>> _survivorPerkSlotKeys = [];
+  List<GlobalKey<PerkSlotViewState>> _killerPerkSlotKeys = [];
 
   final buildTextEditingController = new TextEditingController();
 
@@ -117,8 +118,8 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
     for (var i = 0; i < 4; i++) {
       perkBuild.add(new Perk.empty());
       killerPerkBuild.add(new Perk.empty());
-      _survivorPerkSlotKeys.add(new GlobalKey<_PerkSlotViewState>());
-      _killerPerkSlotKeys.add(new GlobalKey<_PerkSlotViewState>());
+      _survivorPerkSlotKeys.add(new GlobalKey<PerkSlotViewState>());
+      _killerPerkSlotKeys.add(new GlobalKey<PerkSlotViewState>());
     }
 
 
@@ -405,8 +406,14 @@ void _sendCurrentTabToAnalytics() {
           indicatorColor: Theme.of(context).accentColor,
           controller: _tabController,
           tabs: [
-            new Tab(child: new Text("Survivor".toUpperCase())),
-            new Tab(child: new Text("Killer".toUpperCase())),
+            new Tab(
+              icon: ImageIcon(AssetImage('assets/icons/survivor.png')), 
+              text: "Survivor".toUpperCase(),
+            ),
+            new Tab(
+              icon: ImageIcon(AssetImage('assets/icons/killer.png')), 
+              text: "Killer".toUpperCase(),
+            ),
           ]
         ),
         title: new Text(widget.title),
@@ -443,11 +450,11 @@ void _sendCurrentTabToAnalytics() {
         children: [
           new Container(
             color: Theme.of(context).backgroundColor,
-            child: new PerkBuildView(this._survivorPerkSlotViews),
+            child: new PerkDescriptiveBuildView(this._survivorPerkSlotViews),
           ),
           new Container(
             color: Theme.of(context).backgroundColor,
-            child: new PerkBuildView(this._killerPerkSlotViews),
+            child: new PerkDescriptiveBuildView(this._killerPerkSlotViews),
           ),
         ]
       ),
@@ -497,211 +504,4 @@ class BuildNameAlertDialog extends StatelessWidget {
     );
   }
 }
-
-class PerkBuildView extends StatelessWidget {
-  final List<Widget> columnChildren;
-
-  PerkBuildView(this.columnChildren);
-
-  @override
-  Widget build(BuildContext context) {
-    return new OrientationBuilder(builder: (context, orientation) {
-      if (orientation == Orientation.portrait) {
-        return new LayoutBuilder(
-      builder: (layoutContext, constraints) {
-        var width = constraints.maxWidth / 2;
-        var height = constraints.maxHeight / 3.33;
-        var top = 0.0;
-        var topLeft = (constraints.maxWidth / 2) - (width / 2);
-        var midTop = top + (height);
-        var bottomTop = midTop + (height);
-        return new Stack(alignment: AlignmentDirectional.center, children: [
-          new Positioned(
-              top: top,
-              left: topLeft,
-              width: width,
-              height: height,
-              child: columnChildren[0]),
-          new Positioned(
-              top: midTop,
-              left: 0.5,
-              width: width,
-              height: height,
-              child: columnChildren[1]),
-          new Positioned(
-              top: midTop,
-              left: width,
-              width: width,
-              height: height,
-              child: columnChildren[2]),
-          new Positioned(
-              top: bottomTop,
-              left: topLeft,
-              width: width,
-              height: height,
-              child: columnChildren[3]),
-        ]);
-      },
-    );
-    } else {
-      return new Padding(
-        padding: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 60.0),
-        child: new Row(
-          children: columnChildren.map((perk) => new Expanded(child: perk)).toList(),
-        ),
-      );
-    }
-    },);
-  }
-}
-
-class PerkSlotView extends StatefulWidget {
-  const PerkSlotView({Key key, this.perk, this.index, this.onListPressed})
-      : super(key: key);
-  final Perk perk;
-  final int index;
-  final ValueChanged<int> onListPressed;
-
-  @override
-  _PerkSlotViewState createState() => _PerkSlotViewState();
-}
-
-class _PerkSlotViewState extends State<PerkSlotView> {
-  bool isLocked = false;
-  IconData lockIconData;
-  Color lockColor;
-
-  @override
-  void initState() {
-    super.initState();
-    this.lockIconData = getLockIcon();
-    this.lockColor = this.getLockColor();
-  }
-
-  IconData getLockIcon() {
-    return this.isLocked ? Icons.lock : Icons.lock_open;
-  }
-
-  Color getLockColor() {
-    return this.isLocked ? kDbdMutedRed : kDbdGrey;
-  }
-
-  void _handleTap() {
-    widget.onListPressed(widget.index);
-  }
-
-  void _handleLockTapped() {
-    this.isLocked = !this.isLocked;
-    setState(() {
-      this.lockIconData = this.getLockIcon();
-      this.lockColor = this.getLockColor();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    Widget thumbnail = Container();
-    if (widget.perk.thumbnail != "") {
-      thumbnail = new FadeInImage.memoryNetwork(
-        image: widget.perk.thumbnail,
-        placeholder: kTransparentImage,
-      );
-    }
-    return new Padding(
-      padding: const EdgeInsets.all(5.0),
-      child: new GestureDetector(
-        onTap: () {
-          showModalBottomSheet(
-              context: context,
-              builder: (buildContext) {
-                return new PerkDescriptionSheet(widget.perk);
-              });
-        },
-        child: Card(
-          // shape: const _DiamondBorder(),
-          color: this.lockColor,
-          // color: kDbdRed,
-          elevation: 8.0,
-          child: new Padding(
-            padding: const EdgeInsets.all(5.0),
-            child: new Stack(
-              alignment: Alignment.topCenter,
-              children: [
-                new Column(
-                  children: <Widget>[
-                    new Expanded(
-                      child: thumbnail,
-                    ),
-                    new Text(
-                      widget.perk.name.toUpperCase(),
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.caption,
-                    ),
-                  ],
-                ),
-                new Align(
-                  alignment: Alignment.topLeft,
-                  child: new IconButton(
-                    onPressed: _handleLockTapped, 
-                    icon: new Icon(this.lockIconData),
-                  )
-                ),
-                new Align(
-                  alignment: Alignment.topRight,
-                  child: new IconButton(
-                    onPressed: _handleTap, 
-                    icon: const Icon(Icons.list)
-                  )
-                ),
-              ]
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class PerkDescriptionSheet extends StatelessWidget {
-  final Perk perk;
-
-  PerkDescriptionSheet(this.perk);
-
-  @override
-  Widget build(BuildContext context) {
-    Widget thumbnail = Container();
-    if (perk.thumbnail != "") {
-      thumbnail = new FadeInImage.memoryNetwork(
-        image: perk.thumbnail,
-        placeholder: kTransparentImage,
-      );
-    }
-
-    return new Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: new Container(
-        color: kDbdRed,
-        child: new Column(
-          children: <Widget>[
-            new Expanded(
-              child: thumbnail,
-            ),
-            new Text(
-              perk.name.toUpperCase(),
-              style: Theme.of(context).primaryTextTheme.headline,
-            ),
-            new Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: new Text(
-                perk.description,
-                style: Theme.of(context).textTheme.body1,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 
