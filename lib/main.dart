@@ -29,6 +29,7 @@ FirebaseAnalytics analytics = FirebaseAnalytics();
 FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(analytics: analytics);
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   rootBundle.loadString('FIREBASE_APIKEY.txt').then((config){ 
     FirebaseApp.configure(
       name: 'DBDR',
