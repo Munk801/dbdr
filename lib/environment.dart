@@ -1,5 +1,6 @@
 // Dart
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 
 // External Packages
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -36,11 +37,12 @@ class OwnerHeader {
   OwnerHeader(this.owner);
 }
 
-class PerkManager {
+class PerkManager extends ChangeNotifier {
   static final sharedInstance = PerkManager();
   Firestore firestore;
   List<Perk> survivorPerks = [];
   List<Perk> killerPerks = [];
+  bool hasRetrievedPerks = false;
 
   List<Perk> _getPerks(QuerySnapshot query, PlayerRole role) {
     // Converts the documents from the snapshot to perks
@@ -64,6 +66,8 @@ class PerkManager {
       .getDocuments().then((perksDocs) async {
         survivorPerks = _getPerks(perksDocs, PlayerRole.survivor);
         killerPerks = _getPerks(perksDocs, PlayerRole.killer);
+        hasRetrievedPerks = true;
+        notifyListeners();
       }).catchError((error) => print("Unable to get documents: $error"));
   }
 

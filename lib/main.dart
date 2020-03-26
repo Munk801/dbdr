@@ -62,7 +62,7 @@ class MyApp extends StatelessWidget {
         title: 'DBD RANDOMIZER', 
         observer: observer, 
       ),
-      theme: THEME,
+      theme: mainTheme,
       navigatorObservers: [
         observer
       ],
@@ -380,6 +380,7 @@ List<Widget> _createPerkSlotFromBuild(List<Perk> perkBuild, PlayerRole role) {
   for (var i = 0; i < 4; i++) {
     var slotView = new PerkSlotView(
         perk: perkBuild[i],
+        role: role,
         index: i,
         key: perkKeys[i],
         onListPressed: (index) =>

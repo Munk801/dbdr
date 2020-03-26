@@ -28,4 +28,4 @@ ThemeData _buildTheme() {
   );
 }
 
-ThemeData THEME = _buildTheme();
+ThemeData mainTheme = _buildTheme();

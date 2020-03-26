@@ -1,56 +1,97 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:transparent_image/transparent_image.dart';
-
 import 'package:dbdr/perk.dart';
 import 'package:dbdr/constants.dart';
+import 'package:dbdr/shape_utilities.dart';
 
+///A sheet that displays the perk descriptions.
+///Required to provide a [perk] object to define
+///which perk to display the information.
 class PerkDescriptionSheet extends StatelessWidget {
   final Perk perk;
+  final VoidCallback onClose;
 
-  PerkDescriptionSheet(this.perk);
+  PerkDescriptionSheet({@required this.perk, this.onClose});
 
   @override
   Widget build(BuildContext context) {
-    Widget thumbnail = Container();
-    if (perk.thumbnail != "") {
-      thumbnail = new FadeInImage.memoryNetwork(
-        image: perk.thumbnail,
-        placeholder: kTransparentImage,
-      );
-    }
+    Widget thumbnail = Container(width: 150.0, height: 150.0);
+    // if (perk.thumbnail != "") {
+    //   thumbnail = FadeInImage.memoryNetwork(
+    //     image: perk.thumbnail,
+    //     placeholder: kTransparentImage,
+    //   );
+    // }
 
-    return new Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: new Container(
-        color: kDbdRed,
-        child: new Column(
-          children: <Widget>[
-            new Expanded(
-              child: thumbnail,
+    return Container(
+      padding: EdgeInsets.all(20.0),
+      color: kDbdGrey,
+      child: Column(
+        children: <Widget>[
+          Expanded(
+            flex: 1,
+            child: Container(
+              padding: EdgeInsets.fromLTRB(0.0, 20.0, 0.0, 0.0),
+              child: DecoratedBox(
+                decoration: ShapeDecoration(
+                  color: kDbdRed,
+                shape: DiamondBorder()),
+                child: thumbnail,
+              ),
             ),
-            new Text(
-              perk.name.toUpperCase(),
-              style: Theme.of(context).primaryTextTheme.headline,
+          ),
+          Expanded(
+            flex: 0,
+            child: Container(
+              padding: EdgeInsets.all(10.0),
+              child: Text(
+                perk.name.toUpperCase(),
+                style: Theme.of(context).primaryTextTheme.headline,
+              ),
             ),
-            new Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: new Text(
+          ),
+          Expanded(
+            flex: 0,
+            child: Container(
+              padding: EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 0.0),
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "description".toUpperCase(),
+                textAlign: TextAlign.left,
+                style: Theme.of(context).primaryTextTheme.subhead,
+              ),
+            )
+          ),
+          Expanded(
+            flex: 1,
+            child: Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: Text(
                 perk.description,
                 style: Theme.of(context).textTheme.body1,
               ),
             ),
-          ],
-        ),
+          ),
+          Expanded(
+            flex: 0,
+            child: IconButton(
+              icon: Icon(Icons.arrow_drop_down_circle), 
+              onPressed: () {this.onClose();},
+            )
+          )
+        ],
       ),
     );
   }
 }
 
 class PerkSlotView extends StatefulWidget {
-  const PerkSlotView({Key key, this.perk, this.index, this.onListPressed})
+  const PerkSlotView({Key key, this.perk, this.role, this.index, this.onListPressed})
       : super(key: key);
   final Perk perk;
+  final PlayerRole role;
   final int index;
   final ValueChanged<int> onListPressed;
 
@@ -92,13 +133,13 @@ class PerkSlotViewState extends State<PerkSlotView> {
 
   @override
   Widget build(BuildContext context) {
-    Widget thumbnail = Container();
-    if (widget.perk.thumbnail != "") {
-      thumbnail = new FadeInImage.memoryNetwork(
-        image: widget.perk.thumbnail,
-        placeholder: kTransparentImage,
-      );
-    }
+    Widget thumbnail = Container(width: 150.0, height: 150.0);
+    // if (widget.perk.thumbnail != "") {
+    //   thumbnail = new FadeInImage.memoryNetwork(
+    //     image: widget.perk.thumbnail,
+    //     placeholder: kTransparentImage,
+    //   );
+    // }
     return new Padding(
       padding: const EdgeInsets.all(5.0),
       child: new GestureDetector(
@@ -106,7 +147,7 @@ class PerkSlotViewState extends State<PerkSlotView> {
           showModalBottomSheet(
               context: context,
               builder: (buildContext) {
-                return new PerkDescriptionSheet(widget.perk);
+                return new PerkDescriptionSheet(perk: widget.perk);
               });
         },
         child: Card(
@@ -158,12 +199,14 @@ class PerkDescriptiveSlotViewState extends State<PerkSlotView> {
   bool isLocked = false;
   IconData lockIconData;
   Color lockColor;
+  String role;
 
   @override
   void initState() {
     super.initState();
     this.lockIconData = getLockIcon();
     this.lockColor = this.getLockColor();
+    this.role = widget.role == PlayerRole.survivor ? "survivor" : "killer";
   }
 
   IconData getLockIcon() {
@@ -188,51 +231,89 @@ class PerkDescriptiveSlotViewState extends State<PerkSlotView> {
 
   @override
   Widget build(BuildContext context) {
-    Widget thumbnail = Container();
-    if (widget.perk.thumbnail != "") {
-      thumbnail = new FadeInImage.memoryNetwork(
-        image: widget.perk.thumbnail,
-        placeholder: kTransparentImage,
-      );
-    }
     return new GestureDetector(
         onTap: () {
           showModalBottomSheet(
               context: context,
+              isScrollControlled: true,
               builder: (buildContext) {
-                return new PerkDescriptionSheet(widget.perk);
+                PerkDescriptionSheet sheet = PerkDescriptionSheet(
+                  perk: widget.perk, 
+                  onClose: () => Navigator.of(buildContext).pop()
+                );
+                return sheet;
               });
         },
         child: Card(
           color: this.lockColor,
           // color: kDbdRed,
           elevation: 8.0,
-          child: new Container(
-            padding: EdgeInsets.all(5.0),
+          child: Container(
+            padding: EdgeInsets.fromLTRB(5.0, 10.0, 5.0, 10.0),
             child: Row(
               children: <Widget>[
-                new Expanded(
+                Expanded(
                   flex: 1,
-                  child: SizedBox(
-                    child: thumbnail,
-                    height: 150,
+                  child:  SizedBox.expand(
+                    child: FittedBox(
+                      fit: BoxFit.cover,
+                      child: ValueListenableBuilder(
+                        valueListenable: widget.perk.thumbnailNotifier,
+                        builder: (valueContext, value, _) {
+                          if (value == "") {
+                            return Container(width: 150.0, height: 150.0);
+                          }
+                          else {
+                            return FadeInImage.assetNetwork(
+                              image: widget.perk.thumbnail,
+                              placeholder: "assets/icons/${this.role}.png",
+                            );
+                          }
+                        }
+                      ),
+                    ),
                   ),
                 ),
-                new Expanded(
+                Expanded(
                   flex: 2,
-                  child: new Column(
+                  child: Column(
                     children: <Widget>[
-                      new Text(
-                        widget.perk.name.toUpperCase(),
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.subhead,
+                      Expanded(
+                        flex: 0,
+                        child: Container(
+                          alignment: Alignment.topLeft,
+                          padding: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 5.0),
+                          child: Text(
+                            widget.perk.name.toUpperCase(),
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.subtitle,
+                          ),
+                        ),
                       ),
-                      new Text(
-                        widget.perk.description,
-                        textAlign: TextAlign.left,
-                        style: Theme.of(context).textTheme.body1,
-                        maxLines: 5,
-                        overflow: TextOverflow.ellipsis,
+                      Expanded(
+                        flex: 1,
+                        child: Text(
+                          widget.perk.description,
+                          textAlign: TextAlign.left,
+                          style: Theme.of(context).textTheme.caption,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Expanded(
+                        flex:1,
+                        child: ButtonBar(
+                          children: <Widget>[
+                            IconButton(
+                              onPressed: _handleLockTapped, 
+                              icon: Icon(this.lockIconData),
+                            ),
+                            IconButton(
+                              onPressed: _handleTap, 
+                              icon: const Icon(Icons.list)
+                            ),
+                          ],
+                        )
                       ),
                     ],
                   )

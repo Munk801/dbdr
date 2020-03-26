@@ -164,7 +164,7 @@ class FilterPerkListViewCellState extends State<FilterPerkListViewCell> {
         });
       },
       child: new Card(
-        color: widget.perk.isFiltered ? THEME.primaryColor : THEME.primaryColorLight,
+        color: widget.perk.isFiltered ? mainTheme.primaryColor : mainTheme.primaryColorLight,
         child: new Row(
           children: <Widget>[
             thumbnail,

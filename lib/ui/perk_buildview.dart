@@ -70,13 +70,20 @@ class PerkDescriptiveBuildView extends StatelessWidget {
   Widget build(BuildContext context) {
     return new OrientationBuilder(builder: (context, orientation) {
       if (orientation == Orientation.portrait) {
-        return new ListView.builder(
-          padding: EdgeInsets.all(5.0),
-          itemCount: columnChildren.length,
-          itemBuilder: (BuildContext context, int index) {
-            var widget = this.columnChildren[index];
-            return Container(height: 150.0, child: widget,);
-          },
+        return new LayoutBuilder(
+          builder: (layoutContext, constraints) {
+            // Get the container height to match the phone size
+            // We want 20 pixels ot define any extra controls we want
+            var buildContainerHeight = (constraints.maxHeight / 4.0) - 20.0;
+            return ListView.builder(
+              padding: EdgeInsets.all(5.0),
+              itemCount: columnChildren.length,
+              itemBuilder: (BuildContext context, int index) {
+                var widget = this.columnChildren[index];
+                return Container(height: buildContainerHeight, child: widget,);
+              },
+            );
+          }
         );
     } else {
       return new Padding(

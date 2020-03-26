@@ -1,10 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum PlayerRole {survivor, killer}
 
-class Perk {
+class Perk extends ChangeNotifier {
   String id, name, description, owner;
-  String thumbnail = "";
+  ValueNotifier<String> thumbnailNotifier = ValueNotifier<String>("");
   bool isFiltered = false;
 
   Perk(this.id, this.name, this.description);
@@ -16,6 +17,17 @@ class Perk {
     name = document['name'];
     description = document['description'];
     owner = document['owner'];
+  }
+
+  String get thumbnail {
+    return this.thumbnailNotifier.value.toString();
+  }
+
+  // ///When setting the thumbnail notify
+  // ///all other listeners that the thumbnail
+  // ///can now be retrieved.
+  set thumbnail(String newValue) {
+    this.thumbnailNotifier.value = newValue;
   }
 }
 
