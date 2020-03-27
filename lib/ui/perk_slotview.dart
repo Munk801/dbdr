@@ -1,23 +1,23 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:transparent_image/transparent_image.dart';
 import 'package:dbdr/perk.dart';
 import 'package:dbdr/constants.dart';
-import 'package:dbdr/shape_utilities.dart';
+import 'package:dbdr/storage_manager.dart';
 
 ///A sheet that displays the perk descriptions.
 ///Required to provide a [perk] object to define
 ///which perk to display the information.
 class PerkDescriptionSheet extends StatelessWidget {
   final Perk perk;
+  final String role;
   final VoidCallback onClose;
 
-  PerkDescriptionSheet({@required this.perk, this.onClose});
+  PerkDescriptionSheet({@required this.perk, @required this.role, this.onClose});
 
   @override
   Widget build(BuildContext context) {
-    Widget thumbnail = Container(width: 150.0, height: 150.0);
+    // Widget thumbnail = Container(width: 150.0, height: 150.0);
     // if (perk.thumbnail != "") {
     //   thumbnail = FadeInImage.memoryNetwork(
     //     image: perk.thumbnail,
@@ -33,13 +33,15 @@ class PerkDescriptionSheet extends StatelessWidget {
           Expanded(
             flex: 1,
             child: Container(
-              padding: EdgeInsets.fromLTRB(0.0, 20.0, 0.0, 0.0),
-              child: DecoratedBox(
-                decoration: ShapeDecoration(
-                  color: kDbdRed,
-                shape: DiamondBorder()),
-                child: thumbnail,
-              ),
+              padding: EdgeInsets.fromLTRB(10.0, 20.0, 10.0, 20.0),
+              child: PerkThumbnailBox(perk: perk, role: this.role),
+              // child: DecoratedBox(
+              //   decoration: ShapeDecoration(
+              //     color: kDbdRed,
+              //     shape: DiamondBorder()
+              //   ),
+              //   child: PerkThumbnailBox(perk: perk, role: this.role),
+              // ),
             ),
           ),
           Expanded(
@@ -78,7 +80,7 @@ class PerkDescriptionSheet extends StatelessWidget {
             flex: 0,
             child: IconButton(
               icon: Icon(Icons.arrow_drop_down_circle), 
-              onPressed: () {this.onClose();},
+              onPressed: () {if (this.onClose != null) {this.onClose(); }},
             )
           )
         ],
@@ -103,12 +105,14 @@ class PerkSlotViewState extends State<PerkSlotView> {
   bool isLocked = false;
   IconData lockIconData;
   Color lockColor;
+  String role;
 
   @override
   void initState() {
     super.initState();
     this.lockIconData = getLockIcon();
     this.lockColor = this.getLockColor();
+    this.role = widget.role == PlayerRole.survivor ? "survivor" : "killer";
   }
 
   IconData getLockIcon() {
@@ -147,7 +151,7 @@ class PerkSlotViewState extends State<PerkSlotView> {
           showModalBottomSheet(
               context: context,
               builder: (buildContext) {
-                return new PerkDescriptionSheet(perk: widget.perk);
+                return new PerkDescriptionSheet(perk: widget.perk, role: this.role);
               });
         },
         child: Card(
@@ -239,6 +243,7 @@ class PerkDescriptiveSlotViewState extends State<PerkSlotView> {
               builder: (buildContext) {
                 PerkDescriptionSheet sheet = PerkDescriptionSheet(
                   perk: widget.perk, 
+                  role: this.role,
                   onClose: () => Navigator.of(buildContext).pop()
                 );
                 return sheet;
@@ -254,24 +259,9 @@ class PerkDescriptiveSlotViewState extends State<PerkSlotView> {
               children: <Widget>[
                 Expanded(
                   flex: 1,
-                  child:  SizedBox.expand(
-                    child: FittedBox(
-                      fit: BoxFit.cover,
-                      child: ValueListenableBuilder(
-                        valueListenable: widget.perk.thumbnailNotifier,
-                        builder: (valueContext, value, _) {
-                          if (value == "") {
-                            return Container(width: 150.0, height: 150.0);
-                          }
-                          else {
-                            return FadeInImage.assetNetwork(
-                              image: widget.perk.thumbnail,
-                              placeholder: "assets/icons/${this.role}.png",
-                            );
-                          }
-                        }
-                      ),
-                    ),
+                  child:  PerkThumbnailBox(
+                    role: this.role, 
+                    perk: widget.perk,
                   ),
                 ),
                 Expanded(
@@ -323,5 +313,47 @@ class PerkDescriptiveSlotViewState extends State<PerkSlotView> {
           ),
         ),
       );
+  }
+}
+
+class PerkThumbnailBox extends StatelessWidget {
+  const PerkThumbnailBox({
+    Key key,
+    @required this.perk,
+    @required this.role
+  }) : super(key: key);
+
+  final Perk perk;
+  final String role;
+
+  @override
+  Widget build(BuildContext context) {
+    if (this.perk.thumbnail == "") {
+      DBDRStorageManager.sharedInstance
+        .getPerkImageURL(this.perk)
+        .then((image) {
+          this.perk.thumbnail = image;
+        });
+    }
+
+    return SizedBox.expand(
+      child: FittedBox(
+        fit: BoxFit.contain,
+        child: ValueListenableBuilder(
+          valueListenable: this.perk.thumbnailNotifier,
+          builder: (valueContext, value, _) {
+            if (value == "") {
+              return Container(width: 100.0, height: 100.0);
+            }
+            else {
+              return FadeInImage.assetNetwork(
+                image: this.perk.thumbnail,
+                placeholder: "assets/icons/${this.role}.png",
+              );
+            }
+          }
+        ),
+      ),
+    );
   }
 }

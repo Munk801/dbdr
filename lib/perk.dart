@@ -3,6 +3,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum PlayerRole {survivor, killer}
 
+extension PlayerRoleExtension on PlayerRole {
+  String shortString(){
+    return this.toString().split(".").last;
+  }
+}
+
 class Perk extends ChangeNotifier {
   String id, name, description, owner;
   ValueNotifier<String> thumbnailNotifier = ValueNotifier<String>("");
@@ -21,6 +27,11 @@ class Perk extends ChangeNotifier {
 
   String get thumbnail {
     return this.thumbnailNotifier.value.toString();
+  }
+
+  bool isEmpty() {
+    if (id == "") { return true;}
+    return false;
   }
 
   // ///When setting the thumbnail notify

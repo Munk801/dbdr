@@ -2,10 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:transparent_image/transparent_image.dart';
 
-import 'constants.dart';
-import 'environment.dart';
-import 'perk.dart';
-import 'storage_manager.dart';
+import 'package:dbdr/ui/perk_slotview.dart';
+import 'package:dbdr/constants.dart';
+import 'package:dbdr/environment.dart';
+import 'package:dbdr/perk.dart';
 
 class PerkListView extends StatelessWidget {
   final List<Perk> perks;
@@ -27,7 +27,8 @@ class PerkListView extends StatelessWidget {
         itemExtent: 55.0,
         itemBuilder: (context, index) {
           return new PerkListViewCell(
-            PerkManager.sharedInstance.perks(role, ignoreFiltered: true)[index]
+            PerkManager.sharedInstance.perks(role, ignoreFiltered: true)[index],
+            this.role.shortString(),
           );
         }
       ),
@@ -37,8 +38,9 @@ class PerkListView extends StatelessWidget {
 
 class PerkListViewCell extends StatefulWidget {
   final Perk perk;
+  final String role;
 
-  PerkListViewCell(this.perk);
+  PerkListViewCell(this.perk, this.role);
 
   @override
   PerkListViewCellState createState() {
@@ -60,16 +62,6 @@ class PerkListViewCellState extends State<PerkListViewCell> {
 
   @override
   Widget build(BuildContext context) {
-    // Widget thumbnail = Container();
-    if (widget.perk.thumbnail == "") {
-      DBDRStorageManager.sharedInstance
-        .getPerkImageURL(widget.perk)
-        .then((image) {
-          setState(() {
-            widget.perk.thumbnail = image;
-        });
-      });
-    }
     return new GestureDetector(
       onTap: () {
         Navigator.pop(context, widget.perk);
@@ -77,7 +69,7 @@ class PerkListViewCellState extends State<PerkListViewCell> {
       child: new Card(
         child: new Row(
           children: <Widget>[
-            thumbnail,
+            PerkThumbnailBox(perk: null, role: null),
             new Expanded(
               child: new Text(widget.perk.name.toUpperCase()),
             )
@@ -114,7 +106,8 @@ class FilterPerkListView extends StatelessWidget {
           }
           else {
             return new FilterPerkListViewCell(
-              item
+              item,
+              role
             );
           }
         }
@@ -125,8 +118,9 @@ class FilterPerkListView extends StatelessWidget {
 
 class FilterPerkListViewCell extends StatefulWidget {
   final Perk perk;
+  final PlayerRole role;
 
-  FilterPerkListViewCell(this.perk);
+  FilterPerkListViewCell(this.perk, this.role);
 
   @override
   FilterPerkListViewCellState createState() {
@@ -135,28 +129,18 @@ class FilterPerkListViewCell extends StatefulWidget {
 }
 
 class FilterPerkListViewCellState extends State<FilterPerkListViewCell> {
-  FadeInImage thumbnail;
+  Perk perk;
+  String role;
 
   @override
   void initState() {
     super.initState();
-    this.thumbnail = new FadeInImage.memoryNetwork(
-      image: widget.perk.thumbnail,
-      placeholder: kTransparentImage,
-    );
+    this.role = this.widget.role.shortString();
+    this.perk = widget.perk;
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.perk.thumbnail == "") {
-      DBDRStorageManager.sharedInstance
-        .getPerkImageURL(widget.perk)
-        .then((image) {
-          setState(() {
-            widget.perk.thumbnail = image;
-        });
-      });
-    }
     return new GestureDetector(
       onTap: () {
         setState(() {
@@ -167,8 +151,12 @@ class FilterPerkListViewCellState extends State<FilterPerkListViewCell> {
         color: widget.perk.isFiltered ? mainTheme.primaryColor : mainTheme.primaryColorLight,
         child: new Row(
           children: <Widget>[
-            thumbnail,
             new Expanded(
+              flex: 1,
+              child: Container(child: PerkThumbnailBox(perk: this.perk, role: this.role)),
+            ),
+            new Expanded(
+              flex: 4,
               child: new Text(widget.perk.name.toUpperCase()),
             )
           ]
