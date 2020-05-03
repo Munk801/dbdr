@@ -29,8 +29,8 @@ android {
         applicationId "com.lookmastudio.dbdr"
         minSdkVersion 16
         targetSdkVersion 28
-        versionCode 9
-        versionName "1.5"
+        versionCode 10
+        versionName "1.6"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
     }

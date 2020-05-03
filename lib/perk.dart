@@ -14,15 +14,18 @@ class Perk extends ChangeNotifier {
   ValueNotifier<String> thumbnailNotifier = ValueNotifier<String>("");
   bool isFiltered = false;
 
-  Perk(this.id, this.name, this.description);
+  Perk(this.id, this.name, this.description, this.owner);
 
-  Perk.empty() : this("", "", "");
+  Perk.empty() : this("", "", "", "");
 
   Perk.fromDocument(DocumentSnapshot document) {
     id = document.documentID;
     name = document['name'];
     description = document['description'];
     owner = document['owner'];
+    if (owner == "") {
+      owner = "None";
+    }
   }
 
   String get thumbnail {

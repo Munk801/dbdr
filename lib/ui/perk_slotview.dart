@@ -17,14 +17,6 @@ class PerkDescriptionSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Widget thumbnail = Container(width: 150.0, height: 150.0);
-    // if (perk.thumbnail != "") {
-    //   thumbnail = FadeInImage.memoryNetwork(
-    //     image: perk.thumbnail,
-    //     placeholder: kTransparentImage,
-    //   );
-    // }
-
     return Container(
       padding: EdgeInsets.all(20.0),
       color: kDbdGrey,
@@ -35,13 +27,6 @@ class PerkDescriptionSheet extends StatelessWidget {
             child: Container(
               padding: EdgeInsets.fromLTRB(10.0, 20.0, 10.0, 20.0),
               child: PerkThumbnailBox(perk: perk, role: this.role),
-              // child: DecoratedBox(
-              //   decoration: ShapeDecoration(
-              //     color: kDbdRed,
-              //     shape: DiamondBorder()
-              //   ),
-              //   child: PerkThumbnailBox(perk: perk, role: this.role),
-              // ),
             ),
           ),
           Expanded(
@@ -56,25 +41,19 @@ class PerkDescriptionSheet extends StatelessWidget {
           ),
           Expanded(
             flex: 0,
-            child: Container(
-              padding: EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 0.0),
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "description".toUpperCase(),
-                textAlign: TextAlign.left,
-                style: Theme.of(context).primaryTextTheme.subhead,
-              ),
-            )
+            child: SubheadTextWidget(text: "description")
           ),
           Expanded(
             flex: 1,
-            child: Padding(
-              padding: const EdgeInsets.all(5.0),
-              child: Text(
-                perk.description,
-                style: Theme.of(context).textTheme.body1,
-              ),
-            ),
+            child: BodyTextWidget(text: perk.description),
+          ),
+          Expanded(
+            flex: 0,
+            child: SubheadTextWidget(text: "perk owner")
+          ),
+          Expanded(
+            flex: 0,
+            child: BodyTextWidget(text: perk.owner),
           ),
           Expanded(
             flex: 0,
@@ -84,6 +63,48 @@ class PerkDescriptionSheet extends StatelessWidget {
             )
           )
         ],
+      ),
+    );
+  }
+}
+
+class BodyTextWidget extends StatelessWidget {
+  const BodyTextWidget({
+    Key key,
+    @required this.text,
+  }) : super(key: key);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(5.0),
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.body1,
+      ),
+    );
+  }
+}
+
+class SubheadTextWidget extends StatelessWidget {
+  final String text;
+
+  const SubheadTextWidget({
+    Key key,
+    this.text,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 0.0),
+      alignment: Alignment.centerLeft,
+      child: Text(
+        text.toUpperCase(),
+        textAlign: TextAlign.left,
+        style: Theme.of(context).primaryTextTheme.subhead,
       ),
     );
   }
