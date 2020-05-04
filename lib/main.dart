@@ -127,6 +127,7 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
     _auth.signInAnonymously()
       .then((user) { 
         currentUser = user;
+        DBDRStorageManager.sharedInstance.user = user;
         PerkManager.sharedInstance.getAll().then((onReturn) {
           _randomizePerks(PlayerRole.survivor);
           _randomizePerks(PlayerRole.killer);

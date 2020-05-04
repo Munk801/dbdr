@@ -1,6 +1,4 @@
-
 import 'dart:async';
-import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -11,7 +9,7 @@ class DBDRStorageManager {
   static final sharedInstance = new DBDRStorageManager();
   FirebaseStorage storage;
   Map<String, String> perkImageMap;
-  FirebaseAuth _auth;
+  FirebaseUser user;
 
   void initialize({FirebaseApp app}) {
     this.storage = new FirebaseStorage(app: app, 
@@ -19,18 +17,17 @@ class DBDRStorageManager {
   }
 
   Future<String> getPerkImageURL(Perk perk) async {
-    this._auth = FirebaseAuth.instance;
-    // Do not attempt to retrieve the storage data until
-    // the user has been signed in
-    while (this._auth.currentUser() == null) {
-      sleep(Duration(seconds: 2));
-    }
     // Early out if the perk doesn't exist to locate
     if (perk == null || perk.isEmpty()) {
       return "";
     }
+
+    if (user == null) {
+      return "";
+    }
+
     var assetUrl = '/images/perks/${perk.id}.png';
-    var url = await storage.ref().child(assetUrl).getDownloadURL();
+    var url = await FirebaseStorage.instance.ref().child(assetUrl).getDownloadURL();
     return url;
   }
 }
