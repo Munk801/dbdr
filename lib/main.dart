@@ -13,7 +13,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
-
 // Internal Packages
 import 'package:dbdr/ui/perk_slotview.dart';
 import 'package:dbdr/ui/perk_buildview.dart';
@@ -27,11 +26,12 @@ import 'storage_manager.dart';
 final FirebaseAuth _auth = FirebaseAuth.instance;
 
 FirebaseAnalytics analytics = FirebaseAnalytics();
-FirebaseAnalyticsObserver observer = FirebaseAnalyticsObserver(analytics: analytics);
+FirebaseAnalyticsObserver observer =
+    FirebaseAnalyticsObserver(analytics: analytics);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  rootBundle.loadString('FIREBASE_APIKEY.txt').then((config){ 
+  rootBundle.loadString('FIREBASE_APIKEY.txt').then((config) {
     FirebaseApp.configure(
       name: 'DBDR',
       options: new FirebaseOptions(
@@ -50,7 +50,6 @@ void main() async {
   });
 }
 
-
 class MyApp extends StatelessWidget {
   const MyApp();
 
@@ -59,13 +58,11 @@ class MyApp extends StatelessWidget {
     return new MaterialApp(
       title: 'DBD:R',
       home: MyHomePage(
-        title: 'DBD RANDOMIZER', 
-        observer: observer, 
+        title: 'DBD RANDOMIZER',
+        observer: observer,
       ),
       theme: mainTheme,
-      navigatorObservers: [
-        observer
-      ],
+      navigatorObservers: [observer],
       // debugShowCheckedModeBanner: false,
     );
   }
@@ -83,10 +80,11 @@ class MyHomePage extends StatefulWidget {
   }
 }
 
-class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
+class MyHomePageState extends State<MyHomePage>
+    with SingleTickerProviderStateMixin {
   MyHomePageState(this.observer);
 
-  final FirebaseAnalyticsObserver observer; 
+  final FirebaseAnalyticsObserver observer;
 
   List<Perk> perkBuild = [];
   List<Perk> killerPerkBuild = [];
@@ -105,8 +103,9 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
 
   @override
   void initState() {
-    _tabController = TabController(vsync: this, length: 2, initialIndex: selectedIndex);
-    _tabController.addListener(() { 
+    _tabController =
+        TabController(vsync: this, length: 2, initialIndex: selectedIndex);
+    _tabController.addListener(() {
       setState(() {
         if (selectedIndex != _tabController.index) {
           selectedIndex = _tabController.index;
@@ -122,17 +121,15 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
       _killerPerkSlotKeys.add(new GlobalKey<PerkSlotViewState>());
     }
 
-
     // Attempt to sign in anonymously to save builds
-    _auth.signInAnonymously()
-      .then((user) { 
-        currentUser = user;
-        DBDRStorageManager.sharedInstance.user = user;
-        PerkManager.sharedInstance.getAll().then((onReturn) {
-          _randomizePerks(PlayerRole.survivor);
-          _randomizePerks(PlayerRole.killer);
-        });
-      }).catchError((e) {
+    _auth.signInAnonymously().then((user) {
+      currentUser = user;
+      DBDRStorageManager.sharedInstance.user = user;
+      PerkManager.sharedInstance.getAll().then((onReturn) {
+        _randomizePerks(PlayerRole.survivor);
+        _randomizePerks(PlayerRole.killer);
+      });
+    }).catchError((e) {
       print("Error while signing in: $e");
     });
     super.initState();
@@ -147,15 +144,16 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
 
   void _signInAnonymously(BuildContext context) {
     _auth
-      .signInAnonymously()
-      .then((user) => currentUser = user)
-      .catchError((e) {
-        print("Error while signing in: $e");
-      });
+        .signInAnonymously()
+        .then((user) => currentUser = user)
+        .catchError((e) {
+      print("Error while signing in: $e");
+    });
   }
 
   PlayerRole _getRoleFromTabIndex() {
-    var role = _tabController.index == 0 ? PlayerRole.survivor : PlayerRole.killer;
+    var role =
+        _tabController.index == 0 ? PlayerRole.survivor : PlayerRole.killer;
     return role;
   }
 
@@ -163,14 +161,15 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
     if (currentUser == null) {
       Scaffold.of(context).showSnackBar(
         new SnackBar(
-          content: new Text("Unable to connect to server.",),
-          action: new SnackBarAction(
-            label: "Retry", 
-            onPressed: () {
-             _signInAnonymously(context); 
-            },
-          )
-        ),
+            content: new Text(
+              "Unable to connect to server.",
+            ),
+            action: new SnackBarAction(
+              label: "Retry",
+              onPressed: () {
+                _signInAnonymously(context);
+              },
+            )),
       );
       return false;
     }
@@ -178,19 +177,19 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
   }
 
   Future<Null> _navigateAndDisplayBuildListView(BuildContext context) async {
-    if (!_checkLoggedInStatus(context)) {return;}
+    if (!_checkLoggedInStatus(context)) {
+      return;
+    }
     var role = _getRoleFromTabIndex();
-    var perkList = role == PlayerRole.survivor ? PerkManager.sharedInstance.survivorPerks : PerkManager.sharedInstance.killerPerks;
+    var perkList = role == PlayerRole.survivor
+        ? PerkManager.sharedInstance.survivorPerks
+        : PerkManager.sharedInstance.killerPerks;
     var result = await Navigator.push(
       context,
       new MaterialPageRoute(
-        builder: (context) => new BuildListView(
-          currentUser: currentUser, 
-          perks: perkList, 
-          role: role
-        ),
-        settings: RouteSettings(name: "BuildList")
-      ),
+          builder: (context) => new BuildListView(
+              currentUser: currentUser, perks: perkList, role: role),
+          settings: RouteSettings(name: "BuildList")),
     );
     if (result == null) {
       return;
@@ -211,7 +210,7 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
   }
 
   Map<int, Perk> _getLockedPerks(PlayerRole role) {
-    Map<int, Perk> lockedPerks = {}; 
+    Map<int, Perk> lockedPerks = {};
     if (role == PlayerRole.survivor) {
       for (var i = 0; i < 4; i++) {
         var slotKey = _survivorPerkSlotKeys[i];
@@ -234,19 +233,17 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
 
   _navigateAndDisplayPerkListView(BuildContext context, int index) async {
     var role = _getRoleFromTabIndex();
-    var perkList = role == PlayerRole.survivor ? PerkManager.sharedInstance.survivorPerks: PerkManager.sharedInstance.killerPerks;
+    var perkList = role == PlayerRole.survivor
+        ? PerkManager.sharedInstance.survivorPerks
+        : PerkManager.sharedInstance.killerPerks;
     var result = await Navigator.push(
       context,
       new MaterialPageRoute(
-        builder: (context) => new PerkListView(
-          perks: perkList, 
-          role: role
-        ),
-        settings: RouteSettings(name: "PerkList")
-      ),
-    );{
-    if (result == null) 
-      return;
+          builder: (context) => new PerkListView(perks: perkList, role: role),
+          settings: RouteSettings(name: "PerkList")),
+    );
+    {
+      if (result == null) return;
     }
     setState(() {
       switch (role) {
@@ -280,17 +277,17 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
         continue;
       }
       var randomIndex = random.nextInt(perkList.length);
-      while(selected.contains(randomIndex)) {
+      while (selected.contains(randomIndex)) {
         randomIndex = random.nextInt(perkList.length);
       }
       var perkToAdd = perkList[randomIndex];
       if (perkToAdd.thumbnail == "") {
         // Retrieve the perk image and add it to the perk
         DBDRStorageManager.sharedInstance
-          .getPerkImageURL(perkToAdd)
-          .then((image) {
-            setState(() {
-              perkToAdd.thumbnail = image;
+            .getPerkImageURL(perkToAdd)
+            .then((image) {
+          setState(() {
+            perkToAdd.thumbnail = image;
           });
         });
       }
@@ -319,137 +316,136 @@ class MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMi
     var roleString = role == PlayerRole.survivor ? 'survivor' : 'killer';
     var name = buildTextEditingController.text;
     var buildData = {
-      "user": currentUser.uid, 
-      "name": name, 
-      "perk1": perkList[0].id, 
+      "user": currentUser.uid,
+      "name": name,
+      "perk1": perkList[0].id,
       "perk2": perkList[1].id,
-      "perk3": perkList[2].id, 
+      "perk3": perkList[2].id,
       "perk4": perkList[3].id,
       "role": roleString,
-    }; 
+    };
     await Firestore.instance.collection("builds").add(buildData);
-    this.observer.analytics.logEvent(name: "favorited_build", parameters: buildData);
+    this
+        .observer
+        .analytics
+        .logEvent(name: "favorited_build", parameters: buildData);
   }
 
   void _showFavoriteBuildDialog(BuildContext context) {
-    if (!_checkLoggedInStatus(context)) {return;}
+    if (!_checkLoggedInStatus(context)) {
+      return;
+    }
     showDialog(
       context: context,
       builder: (dialogContext) {
         var role = _getRoleFromTabIndex();
-        return new BuildNameAlertDialog(buildTextEditingController, (isSuccess) {
+        return new BuildNameAlertDialog(buildTextEditingController,
+            (isSuccess) {
           if (isSuccess) {
-            _favoriteBuild(role).then((noop) => buildTextEditingController.clear());
-            Scaffold.of(context).showSnackBar(
-              new SnackBar(
-                content: new Text(
-                  "Build has been saved.", 
-                  textAlign: TextAlign.center, 
-                  style: Theme.of(context).primaryTextTheme.subhead,),
-              )
-            );
+            _favoriteBuild(role)
+                .then((noop) => buildTextEditingController.clear());
+            Scaffold.of(context).showSnackBar(new SnackBar(
+              content: new Text(
+                "Build has been saved.",
+                textAlign: TextAlign.center,
+                style: Theme.of(context).primaryTextTheme.subtitle1,
+              ),
+            ));
           }
           // Pop and remove text of build name from text controller
           Navigator.of(dialogContext).pop();
         });
       },
-    ).then((value) {
-    }); 
+    ).then((value) {});
   }
 
   void _showFilterPerksScreen(BuildContext context) async {
     var role = _getRoleFromTabIndex();
-    var perkList = role == PlayerRole.survivor ? PerkManager.sharedInstance.survivorPerks: PerkManager.sharedInstance.killerPerks;
+    var perkList = role == PlayerRole.survivor
+        ? PerkManager.sharedInstance.survivorPerks
+        : PerkManager.sharedInstance.killerPerks;
     var result = await Navigator.push(
       context,
       new MaterialPageRoute(
-        builder: (context) => new FilterPerkListView(
-          perks: perkList, 
-          role: role
-        ),
-        settings: RouteSettings(name: "FilterPerks")
-      ),
-    );{
-    if (result == null) 
-      return;
+          builder: (context) =>
+              new FilterPerkListView(perks: perkList, role: role),
+          settings: RouteSettings(name: "FilterPerks")),
+    );
+    {
+      if (result == null) return;
     }
   }
 
-List<Widget> _createPerkSlotFromBuild(List<Perk> perkBuild, PlayerRole role) {
-  var perkSlotViews = List<Widget>();
-  var perkKeys = role == PlayerRole.survivor ? _survivorPerkSlotKeys : _killerPerkSlotKeys;
-  for (var i = 0; i < 4; i++) {
-    var slotView = new PerkSlotView(
-        perk: perkBuild[i],
-        role: role,
-        index: i,
-        key: perkKeys[i],
-        onListPressed: (index) =>
-            _navigateAndDisplayPerkListView(context, index));
-    perkSlotViews.add(slotView);
+  List<Widget> _createPerkSlotFromBuild(List<Perk> perkBuild, PlayerRole role) {
+    var perkSlotViews = List<Widget>();
+    var perkKeys = role == PlayerRole.survivor
+        ? _survivorPerkSlotKeys
+        : _killerPerkSlotKeys;
+    for (var i = 0; i < 4; i++) {
+      var slotView = new PerkSlotView(
+          perk: perkBuild[i],
+          role: role,
+          index: i,
+          key: perkKeys[i],
+          onListPressed: (index) =>
+              _navigateAndDisplayPerkListView(context, index));
+      perkSlotViews.add(slotView);
+    }
+    return perkSlotViews;
   }
-  return perkSlotViews;
-}
 
-void _sendCurrentTabToAnalytics() {
-  var role = _getRoleFromTabIndex();
-  var roleString = role == PlayerRole.survivor ? 'survivor' : 'killer';
-  var screenName = 'PerksScreen:$roleString';
-  this.observer.analytics.setCurrentScreen(screenName:  screenName);
-}
+  void _sendCurrentTabToAnalytics() {
+    var role = _getRoleFromTabIndex();
+    var roleString = role == PlayerRole.survivor ? 'survivor' : 'killer';
+    var screenName = 'PerksScreen:$roleString';
+    this.observer.analytics.setCurrentScreen(screenName: screenName);
+  }
 
   @override
   Widget build(BuildContext context) {
-    this._survivorPerkSlotViews = _createPerkSlotFromBuild(perkBuild, PlayerRole.survivor);
-    this._killerPerkSlotViews = _createPerkSlotFromBuild(killerPerkBuild, PlayerRole.killer);
+    this._survivorPerkSlotViews =
+        _createPerkSlotFromBuild(perkBuild, PlayerRole.survivor);
+    this._killerPerkSlotViews =
+        _createPerkSlotFromBuild(killerPerkBuild, PlayerRole.killer);
     return new Scaffold(
-      appBar: new AppBar(
-        bottom: new TabBar(
-          indicatorColor: Theme.of(context).accentColor,
-          controller: _tabController,
-          tabs: [
-            new Tab(
-              icon: ImageIcon(AssetImage('assets/icons/survivor.png')), 
-              text: "Survivor".toUpperCase(),
-            ),
-            new Tab(
-              icon: ImageIcon(AssetImage('assets/icons/killer.png')), 
-              text: "Killer".toUpperCase(),
-            ),
-          ]
-        ),
-        title: new Text(widget.title),
-        centerTitle: true,
-        leading: new Builder(builder: (context) {
-              return new IconButton(
-                onPressed:  () => _showFilterPerksScreen(context),
-                icon: Icon(Icons.filter_list)
-              );
+        appBar: new AppBar(
+          bottom: new TabBar(
+              indicatorColor: Theme.of(context).accentColor,
+              controller: _tabController,
+              tabs: [
+                new Tab(
+                  icon: ImageIcon(AssetImage('assets/icons/survivor.png')),
+                  text: "Survivor".toUpperCase(),
+                ),
+                new Tab(
+                  icon: ImageIcon(AssetImage('assets/icons/killer.png')),
+                  text: "Killer".toUpperCase(),
+                ),
+              ]),
+          title: new Text(widget.title),
+          centerTitle: true,
+          leading: new Builder(builder: (context) {
+            return new IconButton(
+                onPressed: () => _showFilterPerksScreen(context),
+                icon: Icon(Icons.filter_list));
           }),
-        actions: [
-          new Builder(
-            builder: (context) {
+          actions: [
+            new Builder(builder: (context) {
               return new IconButton(
                 onPressed: () => _showFavoriteBuildDialog(context),
                 icon: const Icon(Icons.favorite),
               );
-            }
-          ),
-          new Builder(
-            builder: (context) {
+            }),
+            new Builder(builder: (context) {
               return new IconButton(
-                onPressed: () {
-                  _navigateAndDisplayBuildListView(context);
-                }, 
-                icon: const Icon(Icons.more_vert)
-              );
-            }
-          ),
-        ],
-      ),
-      body: new TabBarView(
-        controller: _tabController,
-        children: [
+                  onPressed: () {
+                    _navigateAndDisplayBuildListView(context);
+                  },
+                  icon: const Icon(Icons.more_vert));
+            }),
+          ],
+        ),
+        body: new TabBarView(controller: _tabController, children: [
           new Container(
             color: Theme.of(context).backgroundColor,
             child: new PerkDescriptiveBuildView(this._survivorPerkSlotViews),
@@ -458,52 +454,54 @@ void _sendCurrentTabToAnalytics() {
             color: Theme.of(context).backgroundColor,
             child: new PerkDescriptiveBuildView(this._killerPerkSlotViews),
           ),
-        ]
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: new FloatingActionButton.extended(
-        onPressed: () {
-          var role = _getRoleFromTabIndex();
-          _randomizePerks(role);
-        },
-        backgroundColor: Theme.of(context).accentColor,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.swap_calls),
-        label: new Text("Randomize".toUpperCase()),
-      )
-    );
+        ]),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+        floatingActionButton: new FloatingActionButton.extended(
+          onPressed: () {
+            var role = _getRoleFromTabIndex();
+            _randomizePerks(role);
+          },
+          backgroundColor: Theme.of(context).accentColor,
+          foregroundColor: Colors.white,
+          icon: const Icon(Icons.swap_calls),
+          label: new Text("Randomize".toUpperCase()),
+        ));
   }
 }
 
 class BuildNameAlertDialog extends StatelessWidget {
   final TextEditingController buildTextEditingController;
-  final ValueChanged<bool> completion; 
+  final ValueChanged<bool> completion;
 
   BuildNameAlertDialog(this.buildTextEditingController, this.completion);
 
   @override
   Widget build(BuildContext context) {
     return new AlertDialog(
-      title: new Text("Name Your Build".toUpperCase(), style: Theme.of(context).primaryTextTheme.subhead),
+      title: new Text("Name Your Build".toUpperCase(),
+          style: Theme.of(context).primaryTextTheme.subtitle1),
       content: new Form(
-        child: new TextFormField(
+          child: new TextFormField(
         controller: buildTextEditingController,
       )),
       actions: <Widget>[
         new FlatButton(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(const Radius.circular(8.0))),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(const Radius.circular(8.0))),
           color: Theme.of(context).primaryColor,
           onPressed: () => completion(false),
-          child: new Text("Cancel".toUpperCase(), style: Theme.of(context).primaryTextTheme.button),
+          child: new Text("Cancel".toUpperCase(),
+              style: Theme.of(context).primaryTextTheme.button),
         ),
         new FlatButton(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(const Radius.circular(8.0))),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(const Radius.circular(8.0))),
           color: Theme.of(context).accentColor,
           onPressed: () => completion(true),
-          child: new Text("Done".toUpperCase(), style: Theme.of(context).primaryTextTheme.button),
+          child: new Text("Done".toUpperCase(),
+              style: Theme.of(context).primaryTextTheme.button),
         )
       ],
     );
   }
 }
-

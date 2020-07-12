@@ -53,11 +53,12 @@ class BuildListView extends StatelessWidget {
                     key: new Key(id),
                     confirmDismiss: (direction) {
                       return showDialog(
-                        context: context,
-                        builder: (dialogContext) {
-                          return new ConfirmDeleteBuildDialog((shouldDelete) => Navigator.of(context).pop(shouldDelete));
-                        }
-                      );
+                          context: context,
+                          builder: (dialogContext) {
+                            return new ConfirmDeleteBuildDialog(
+                                (shouldDelete) =>
+                                    Navigator.of(context).pop(shouldDelete));
+                          });
                     },
                     onDismissed: (direction) {
                       PerkManager.sharedInstance.removeBuild(id).then((_) {
@@ -65,12 +66,11 @@ class BuildListView extends StatelessWidget {
                       });
                     },
                     background: new Container(
-                      color: kDbdRed, 
-                      child: new Align(
-                        alignment: const Alignment(0.8, 0.0),
-                        child: const Text('DELETE'),
-                        ) 
-                      ),
+                        color: kDbdRed,
+                        child: new Align(
+                          alignment: const Alignment(0.8, 0.0),
+                          child: const Text('DELETE'),
+                        )),
                     child: BuildListViewCell(
                         buildName: buildName,
                         perk1: perk1,
@@ -85,26 +85,33 @@ class BuildListView extends StatelessWidget {
 }
 
 class ConfirmDeleteBuildDialog extends StatelessWidget {
-  final ValueChanged<bool> completion; 
+  final ValueChanged<bool> completion;
 
   ConfirmDeleteBuildDialog(this.completion);
 
   @override
   Widget build(BuildContext context) {
     return new AlertDialog(
-      title: new Text("This will delete your build.  Are you sure you would like to delete?".toUpperCase(), style: Theme.of(context).primaryTextTheme.subhead),
+      title: new Text(
+          "This will delete your build.  Are you sure you would like to delete?"
+              .toUpperCase(),
+          style: Theme.of(context).primaryTextTheme.subtitle1),
       actions: <Widget>[
         new FlatButton(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(const Radius.circular(8.0))),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(const Radius.circular(8.0))),
           color: Theme.of(context).primaryColor,
           onPressed: () => completion(false),
-          child: new Text("No".toUpperCase(), style: Theme.of(context).primaryTextTheme.button),
+          child: new Text("No".toUpperCase(),
+              style: Theme.of(context).primaryTextTheme.button),
         ),
         new FlatButton(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(const Radius.circular(8.0))),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(const Radius.circular(8.0))),
           color: Theme.of(context).accentColor,
           onPressed: () => completion(true),
-          child: new Text("Yes".toUpperCase(), style: Theme.of(context).primaryTextTheme.button),
+          child: new Text("Yes".toUpperCase(),
+              style: Theme.of(context).primaryTextTheme.button),
         )
       ],
     );
@@ -136,7 +143,7 @@ class BuildListViewCell extends StatelessWidget {
                   child: new Text(
                     buildName.toUpperCase(),
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).primaryTextTheme.subhead,
+                    style: Theme.of(context).primaryTextTheme.subtitle1,
                   ),
                 )
               ]),
@@ -179,11 +186,9 @@ class PerkThumbnailState extends State<PerkThumbnail> {
   void initState() {
     perk = widget.perk;
     if (perk.thumbnail == "") {
-      DBDRStorageManager.sharedInstance
-        .getPerkImageURL(perk)
-        .then((image) {
-          setState(() => perk.thumbnail = image);
-        });
+      DBDRStorageManager.sharedInstance.getPerkImageURL(perk).then((image) {
+        setState(() => perk.thumbnail = image);
+      });
     }
     super.initState();
   }
@@ -197,13 +202,16 @@ class PerkThumbnailState extends State<PerkThumbnail> {
         width: 120.0,
         placeholder: kTransparentImage,
       );
-    } else {
-    }
+    } else {}
     return new Expanded(
       child: Column(
         children: <Widget>[
           thumbnail,
-          new Text(widget.perk.name, textAlign: TextAlign.center, style: Theme.of(context).textTheme.caption,),
+          new Text(
+            widget.perk.name,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.caption,
+          ),
         ],
       ),
     );

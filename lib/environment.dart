@@ -14,9 +14,7 @@ String _getRoleString(PlayerRole role) {
   return role == PlayerRole.survivor ? 'survivor' : 'killer';
 }
 
-class Environment {
-
-}
+class Environment {}
 
 class AuthManager {
   static final sharedInstance = AuthManager();
@@ -25,10 +23,13 @@ class AuthManager {
   FirebaseUser currentUser;
 
   signIn() {
-    _auth.signInAnonymously().then((user) => currentUser = user).catchError((e) {
+    _auth
+        .signInAnonymously()
+        .then((user) => currentUser = user)
+        .catchError((e) {
       print("Error while signing in: $e");
     });
-  }      
+  }
 }
 
 class OwnerHeader {
@@ -48,12 +49,12 @@ class PerkManager extends ChangeNotifier {
     // Converts the documents from the snapshot to perks
     var roleString = role == PlayerRole.survivor ? 'survivor' : 'killer';
     var perks = query.documents
-      .where((snapshot) => snapshot['role'] == roleString)
-      .map((document) {
-        var perk = Perk.fromDocument(document);
-        return perk;
-      }).toList();
-      return perks;
+        .where((snapshot) => snapshot['role'] == roleString)
+        .map((document) {
+      var perk = Perk.fromDocument(document);
+      return perk;
+    }).toList();
+    return perks;
   }
 
   initialize({FirebaseApp app}) {
@@ -62,20 +63,19 @@ class PerkManager extends ChangeNotifier {
 
   Future<Null> getAll() async {
     // Retrieve all perks based on the playe rrole
-    await firestore.collection('perks')
-      .getDocuments().then((perksDocs) async {
-        survivorPerks = _getPerks(perksDocs, PlayerRole.survivor);
-        killerPerks = _getPerks(perksDocs, PlayerRole.killer);
-        hasRetrievedPerks = true;
-        notifyListeners();
-      }).catchError((error) => print("Unable to get documents: $error"));
+    await firestore.collection('perks').getDocuments().then((perksDocs) async {
+      survivorPerks = _getPerks(perksDocs, PlayerRole.survivor);
+      killerPerks = _getPerks(perksDocs, PlayerRole.killer);
+      hasRetrievedPerks = true;
+      notifyListeners();
+    }).catchError((error) => print("Unable to get documents: $error"));
   }
 
   List<Perk> filter(List<Perk> perks) {
     return perks.where((p) => !p.isFiltered).toList();
   }
 
-  List<Perk> perks(role, {bool ignoreFiltered=false}) {
+  List<Perk> perks(role, {bool ignoreFiltered = false}) {
     List<Perk> perks = [];
     if (role == PlayerRole.survivor) {
       perks = ignoreFiltered ? this.filter(survivorPerks) : survivorPerks;
@@ -85,32 +85,32 @@ class PerkManager extends ChangeNotifier {
     return perks;
   }
 
-  Map<String, List<Perk>> rolePerkMap(PlayerRole role, {bool ignoreFiltered=false}) {
+  Map<String, List<Perk>> rolePerkMap(PlayerRole role,
+      {bool ignoreFiltered = false}) {
     var perks = this.perks(role, ignoreFiltered: ignoreFiltered);
     Map<String, List<Perk>> perkMap = {};
     // Add the All categories first
     perkMap["All"] = [];
     for (var perk in perks) {
-      if (perk.owner == "") {
+      if (perk.owner == "" || perk.owner == "None") {
         perkMap["All"].add(perk);
-      }
-      else if (perkMap.containsKey(perk.owner)) {
+      } else if (perkMap.containsKey(perk.owner)) {
         perkMap[perk.owner].add(perk);
-      }
-      else {
+      } else {
         perkMap[perk.owner] = [perk];
       }
     }
     return perkMap;
   }
 
-  List flattenedOwnerPerkList(PlayerRole role, {bool ignoreFiltered=false}) {
+  List flattenedOwnerPerkList(PlayerRole role, {bool ignoreFiltered = false}) {
     /* Returns a flattened list in the following
     [owner, perk, perk perk, owner ...]
     This can be used to pass through a list view which you need the owner to be displayed
     */
     List perkList = [];
-    Map<String, List<Perk>> perkMap = this.rolePerkMap(role, ignoreFiltered: ignoreFiltered);
+    Map<String, List<Perk>> perkMap =
+        this.rolePerkMap(role, ignoreFiltered: ignoreFiltered);
     perkMap.forEach((owner, perks) {
       perkList.add(owner);
       perkList.addAll(perks);
@@ -120,10 +120,11 @@ class PerkManager extends ChangeNotifier {
 
   Stream<QuerySnapshot> getUserBuilds({PlayerRole role, String uid}) {
     var roleString = _getRoleString(role);
-    return Firestore.instance.collection('builds')
-      .where("user", isEqualTo: uid)
-      .where('role', isEqualTo: roleString)
-      .snapshots();
+    return Firestore.instance
+        .collection('builds')
+        .where("user", isEqualTo: uid)
+        .where('role', isEqualTo: roleString)
+        .snapshots();
   }
 
   Future<Null> removeBuild(String documentID) async {

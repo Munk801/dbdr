@@ -94,3 +94,5 @@ android/app/key.jks
 ios/Runner.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
 ios/Runner.xcodeproj/project.pbxproj
 ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme
+ios/Flutter/flutter_export_environment.sh
+.flutter-plugins-dependencies

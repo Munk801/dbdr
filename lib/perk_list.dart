@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:transparent_image/transparent_image.dart';
 
@@ -22,16 +21,16 @@ class PerkListView extends StatelessWidget {
         title: const Text('Select Perk'),
       ),
       body: new ListView.builder(
-        itemCount: PerkManager.sharedInstance.perks(role).length,
-        padding: const EdgeInsets.only(top: 10.0),
-        itemExtent: 55.0,
-        itemBuilder: (context, index) {
-          return new PerkListViewCell(
-            PerkManager.sharedInstance.perks(role, ignoreFiltered: true)[index],
-            this.role.shortString(),
-          );
-        }
-      ),
+          itemCount: PerkManager.sharedInstance.perks(role).length,
+          padding: const EdgeInsets.only(top: 10.0),
+          itemExtent: 55.0,
+          itemBuilder: (context, index) {
+            return new PerkListViewCell(
+              PerkManager.sharedInstance
+                  .perks(role, ignoreFiltered: true)[index],
+              this.role.shortString(),
+            );
+          }),
     );
   }
 }
@@ -67,19 +66,21 @@ class PerkListViewCellState extends State<PerkListViewCell> {
         Navigator.pop(context, widget.perk);
       },
       child: new Card(
-        child: new Row(
-          children: <Widget>[
-            PerkThumbnailBox(perk: null, role: null),
-            new Expanded(
-              child: new Text(widget.perk.name.toUpperCase()),
-            )
-          ]
-        ),
+        child: new Row(children: <Widget>[
+          new Expanded(
+            flex: 1,
+            child: Container(
+                child: PerkThumbnailBox(perk: widget.perk, role: widget.role)),
+          ),
+          new Expanded(
+            flex: 4,
+            child: new Text(widget.perk.name.toUpperCase()),
+          )
+        ]),
       ),
     );
   }
 }
-
 
 class FilterPerkListView extends StatelessWidget {
   final List<Perk> perks;
@@ -96,22 +97,21 @@ class FilterPerkListView extends StatelessWidget {
         title: const Text('FILTER PERKS'),
       ),
       body: new ListView.builder(
-        itemCount: PerkManager.sharedInstance.flattenedOwnerPerkList(role).length,
-        padding: const EdgeInsets.only(top: 10.0),
-        itemExtent: 55.0,
-        itemBuilder: (context, index) {
-          var item = PerkManager.sharedInstance.flattenedOwnerPerkList(role)[index];
-          if (item is String) {
-            return new ListTile(title: Text(item, style: Theme.of(context).textTheme.headline));
-          }
-          else {
-            return new FilterPerkListViewCell(
-              item,
-              role
-            );
-          }
-        }
-      ),
+          itemCount:
+              PerkManager.sharedInstance.flattenedOwnerPerkList(role).length,
+          padding: const EdgeInsets.only(top: 10.0),
+          itemExtent: 55.0,
+          itemBuilder: (context, index) {
+            var item =
+                PerkManager.sharedInstance.flattenedOwnerPerkList(role)[index];
+            if (item is String) {
+              return new ListTile(
+                  title:
+                      Text(item, style: Theme.of(context).textTheme.headline5));
+            } else {
+              return new FilterPerkListViewCell(item, role);
+            }
+          }),
     );
   }
 }
@@ -148,19 +148,20 @@ class FilterPerkListViewCellState extends State<FilterPerkListViewCell> {
         });
       },
       child: new Card(
-        color: widget.perk.isFiltered ? mainTheme.primaryColor : mainTheme.primaryColorLight,
-        child: new Row(
-          children: <Widget>[
-            new Expanded(
-              flex: 1,
-              child: Container(child: PerkThumbnailBox(perk: this.perk, role: this.role)),
-            ),
-            new Expanded(
-              flex: 4,
-              child: new Text(widget.perk.name.toUpperCase()),
-            )
-          ]
-        ),
+        color: widget.perk.isFiltered
+            ? mainTheme.primaryColor
+            : mainTheme.primaryColorLight,
+        child: new Row(children: <Widget>[
+          new Expanded(
+            flex: 1,
+            child: Container(
+                child: PerkThumbnailBox(perk: this.perk, role: this.role)),
+          ),
+          new Expanded(
+            flex: 4,
+            child: new Text(widget.perk.name.toUpperCase()),
+          )
+        ]),
       ),
     );
   }

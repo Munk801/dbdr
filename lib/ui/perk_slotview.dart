@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:dbdr/perk.dart';
@@ -13,7 +12,8 @@ class PerkDescriptionSheet extends StatelessWidget {
   final String role;
   final VoidCallback onClose;
 
-  PerkDescriptionSheet({@required this.perk, @required this.role, this.onClose});
+  PerkDescriptionSheet(
+      {@required this.perk, @required this.role, this.onClose});
 
   @override
   Widget build(BuildContext context) {
@@ -35,33 +35,30 @@ class PerkDescriptionSheet extends StatelessWidget {
               padding: EdgeInsets.all(10.0),
               child: Text(
                 perk.name.toUpperCase(),
-                style: Theme.of(context).primaryTextTheme.headline,
+                style: Theme.of(context).primaryTextTheme.headline5,
               ),
             ),
           ),
-          Expanded(
-            flex: 0,
-            child: SubheadTextWidget(text: "description")
-          ),
+          Expanded(flex: 0, child: Subtitle1TextWidget(text: "description")),
           Expanded(
             flex: 1,
             child: BodyTextWidget(text: perk.description),
           ),
-          Expanded(
-            flex: 0,
-            child: SubheadTextWidget(text: "perk owner")
-          ),
+          Expanded(flex: 0, child: Subtitle1TextWidget(text: "perk owner")),
           Expanded(
             flex: 0,
             child: BodyTextWidget(text: perk.owner),
           ),
           Expanded(
-            flex: 0,
-            child: IconButton(
-              icon: Icon(Icons.arrow_drop_down_circle), 
-              onPressed: () {if (this.onClose != null) {this.onClose(); }},
-            )
-          )
+              flex: 0,
+              child: IconButton(
+                icon: Icon(Icons.arrow_drop_down_circle),
+                onPressed: () {
+                  if (this.onClose != null) {
+                    this.onClose();
+                  }
+                },
+              ))
         ],
       ),
     );
@@ -82,16 +79,16 @@ class BodyTextWidget extends StatelessWidget {
       padding: const EdgeInsets.all(5.0),
       child: Text(
         text,
-        style: Theme.of(context).textTheme.body1,
+        style: Theme.of(context).textTheme.bodyText2,
       ),
     );
   }
 }
 
-class SubheadTextWidget extends StatelessWidget {
+class Subtitle1TextWidget extends StatelessWidget {
   final String text;
 
-  const SubheadTextWidget({
+  const Subtitle1TextWidget({
     Key key,
     this.text,
   }) : super(key: key);
@@ -104,14 +101,15 @@ class SubheadTextWidget extends StatelessWidget {
       child: Text(
         text.toUpperCase(),
         textAlign: TextAlign.left,
-        style: Theme.of(context).primaryTextTheme.subhead,
+        style: Theme.of(context).primaryTextTheme.subtitle1,
       ),
     );
   }
 }
 
 class PerkSlotView extends StatefulWidget {
-  const PerkSlotView({Key key, this.perk, this.role, this.index, this.onListPressed})
+  const PerkSlotView(
+      {Key key, this.perk, this.role, this.index, this.onListPressed})
       : super(key: key);
   final Perk perk;
   final PlayerRole role;
@@ -172,7 +170,8 @@ class PerkSlotViewState extends State<PerkSlotView> {
           showModalBottomSheet(
               context: context,
               builder: (buildContext) {
-                return new PerkDescriptionSheet(perk: widget.perk, role: this.role);
+                return new PerkDescriptionSheet(
+                    perk: widget.perk, role: this.role);
               });
         },
         child: Card(
@@ -182,37 +181,30 @@ class PerkSlotViewState extends State<PerkSlotView> {
           elevation: 8.0,
           child: new Padding(
             padding: const EdgeInsets.all(5.0),
-            child: new Stack(
-              alignment: Alignment.topCenter,
-              children: [
-                new Column(
-                  children: <Widget>[
-                    new Expanded(
-                      child: thumbnail,
-                    ),
-                    new Text(
-                      widget.perk.name.toUpperCase(),
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.caption,
-                    ),
-                  ],
-                ),
-                new Align(
+            child: new Stack(alignment: Alignment.topCenter, children: [
+              new Column(
+                children: <Widget>[
+                  new Expanded(
+                    child: thumbnail,
+                  ),
+                  new Text(
+                    widget.perk.name.toUpperCase(),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.caption,
+                  ),
+                ],
+              ),
+              new Align(
                   alignment: Alignment.topLeft,
                   child: new IconButton(
-                    onPressed: _handleLockTapped, 
+                    onPressed: _handleLockTapped,
                     icon: new Icon(this.lockIconData),
-                  )
-                ),
-                new Align(
+                  )),
+              new Align(
                   alignment: Alignment.topRight,
                   child: new IconButton(
-                    onPressed: _handleTap, 
-                    icon: const Icon(Icons.list)
-                  )
-                ),
-              ]
-            ),
+                      onPressed: _handleTap, icon: const Icon(Icons.list))),
+            ]),
           ),
         ),
       ),
@@ -257,35 +249,34 @@ class PerkDescriptiveSlotViewState extends State<PerkSlotView> {
   @override
   Widget build(BuildContext context) {
     return new GestureDetector(
-        onTap: () {
-          showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              builder: (buildContext) {
-                PerkDescriptionSheet sheet = PerkDescriptionSheet(
-                  perk: widget.perk, 
+      onTap: () {
+        showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (buildContext) {
+              PerkDescriptionSheet sheet = PerkDescriptionSheet(
+                  perk: widget.perk,
                   role: this.role,
-                  onClose: () => Navigator.of(buildContext).pop()
-                );
-                return sheet;
-              });
-        },
-        child: Card(
-          color: this.lockColor,
-          // color: kDbdRed,
-          elevation: 8.0,
-          child: Container(
-            padding: EdgeInsets.fromLTRB(5.0, 10.0, 5.0, 10.0),
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  flex: 1,
-                  child:  PerkThumbnailBox(
-                    role: this.role, 
-                    perk: widget.perk,
-                  ),
+                  onClose: () => Navigator.of(buildContext).pop());
+              return sheet;
+            });
+      },
+      child: Card(
+        color: this.lockColor,
+        // color: kDbdRed,
+        elevation: 8.0,
+        child: Container(
+          padding: EdgeInsets.fromLTRB(5.0, 10.0, 5.0, 10.0),
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                flex: 1,
+                child: PerkThumbnailBox(
+                  role: this.role,
+                  perk: widget.perk,
                 ),
-                Expanded(
+              ),
+              Expanded(
                   flex: 2,
                   child: Column(
                     children: <Widget>[
@@ -297,7 +288,7 @@ class PerkDescriptiveSlotViewState extends State<PerkSlotView> {
                           child: Text(
                             widget.perk.name.toUpperCase(),
                             textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.subtitle,
+                            style: Theme.of(context).textTheme.subtitle2,
                           ),
                         ),
                       ),
@@ -311,38 +302,34 @@ class PerkDescriptiveSlotViewState extends State<PerkSlotView> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Expanded(
-                        flex:1,
-                        child: ButtonBar(
-                          children: <Widget>[
-                            IconButton(
-                              onPressed: _handleLockTapped, 
-                              icon: Icon(this.lockIconData),
-                            ),
-                            IconButton(
-                              onPressed: _handleTap, 
-                              icon: const Icon(Icons.list)
-                            ),
-                          ],
-                        )
-                      ),
                     ],
-                  )
-                )
-              ],
-            ),
+                  )),
+              Expanded(
+                  flex: 1,
+                  child: ButtonBar(
+                    layoutBehavior: ButtonBarLayoutBehavior.constrained,
+                    alignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      IconButton(
+                        onPressed: _handleLockTapped,
+                        icon: Icon(this.lockIconData),
+                      ),
+                      IconButton(
+                          onPressed: _handleTap, icon: const Icon(Icons.list)),
+                    ],
+                  )),
+            ],
           ),
         ),
-      );
+      ),
+    );
   }
 }
 
 class PerkThumbnailBox extends StatelessWidget {
-  const PerkThumbnailBox({
-    Key key,
-    @required this.perk,
-    @required this.role
-  }) : super(key: key);
+  const PerkThumbnailBox({Key key, @required this.perk, @required this.role})
+      : super(key: key);
 
   final Perk perk;
   final String role;
@@ -351,29 +338,27 @@ class PerkThumbnailBox extends StatelessWidget {
   Widget build(BuildContext context) {
     if (this.perk.thumbnail == "") {
       DBDRStorageManager.sharedInstance
-        .getPerkImageURL(this.perk)
-        .then((image) {
-          this.perk.thumbnail = image;
-        });
+          .getPerkImageURL(this.perk)
+          .then((image) {
+        this.perk.thumbnail = image;
+      });
     }
 
     return SizedBox.expand(
       child: FittedBox(
         fit: BoxFit.contain,
         child: ValueListenableBuilder(
-          valueListenable: this.perk.thumbnailNotifier,
-          builder: (valueContext, value, _) {
-            if (value == "") {
-              return Container(width: 100.0, height: 100.0);
-            }
-            else {
-              return FadeInImage.assetNetwork(
-                image: this.perk.thumbnail,
-                placeholder: "assets/icons/${this.role}.png",
-              );
-            }
-          }
-        ),
+            valueListenable: this.perk.thumbnailNotifier,
+            builder: (valueContext, value, _) {
+              if (value == "") {
+                return Container(width: 100.0, height: 100.0);
+              } else {
+                return FadeInImage.assetNetwork(
+                  image: this.perk.thumbnail,
+                  placeholder: "assets/icons/${this.role}.png",
+                );
+              }
+            }),
       ),
     );
   }
